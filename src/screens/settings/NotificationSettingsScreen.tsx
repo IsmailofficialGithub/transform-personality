@@ -190,9 +190,7 @@ export const NotificationSettingsScreen = ({ onBack }: NotificationSettingsScree
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={[styles.backText, { color: textColor }]}>← Back</Text>
-        </TouchableOpacity>
+        <View style={styles.placeholder} />
         <Text style={[styles.title, { color: textColor }]}>Notifications</Text>
         <View style={styles.placeholder} />
       </View>

@@ -15,11 +15,12 @@ import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SIZES } from "../utils/theme";
-import { useHabitStore } from "../store/habitStore";
-import { useThemeStore } from "../store/themeStore";
-import { usePremium } from "../hooks/usePremium";
-import { PremiumTestPanel } from "../components/premium/PremiumTestPanel";
+import Toast from "react-native-root-toast";
+import { SIZES } from "../../utils/theme";
+import { useHabitStore } from "../../store/habitStore";
+import { useThemeStore } from "../../store/themeStore";
+import { usePremium } from "../../hooks/usePremium";
+import { PremiumTestPanel } from "../../components/premium/PremiumTestPanel";
 
 interface UserProfile {
   name: string;
@@ -81,41 +82,81 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
   };
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission needed", "Please grant media permission.");
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Toast.show("Permission needed. Please grant media permission.", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          backgroundColor: "#E53935",
+          textColor: "#FFF",
+        });
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      const newProfile = { ...profile, profileImage: result.assets[0].uri };
-      saveProfile(newProfile);
+      if (!result.canceled && result.assets[0]) {
+        const newProfile = { ...profile, profileImage: result.assets[0].uri };
+        saveProfile(newProfile);
+        Toast.show("Profile photo updated! 📸", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          backgroundColor: "#4CAF50",
+          textColor: "#FFF",
+        });
+      }
+    } catch (error: any) {
+      Toast.show("Failed to update photo. Please try again.", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: "#E53935",
+        textColor: "#FFF",
+      });
     }
   };
 
   const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission needed", "Please grant camera permission.");
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Toast.show("Permission needed. Please grant camera permission.", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          backgroundColor: "#E53935",
+          textColor: "#FFF",
+        });
+        return;
+      }
 
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      const newProfile = { ...profile, profileImage: result.assets[0].uri };
-      saveProfile(newProfile);
+      if (!result.canceled && result.assets[0]) {
+        const newProfile = { ...profile, profileImage: result.assets[0].uri };
+        saveProfile(newProfile);
+        Toast.show("Profile photo updated! 📸", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          backgroundColor: "#4CAF50",
+          textColor: "#FFF",
+        });
+      }
+    } catch (error: any) {
+      Toast.show("Failed to take photo. Please try again.", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: "#E53935",
+        textColor: "#FFF",
+      });
     }
   };
 
@@ -135,12 +176,32 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
 
   const saveEditProfile = () => {
     if (!editName.trim()) {
-      Alert.alert("Error", "Name cannot be empty");
+      Toast.show("Name cannot be empty", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: "#E53935",
+        textColor: "#FFF",
+      });
       return;
     }
-    const newProfile = { ...profile, name: editName, email: editEmail };
-    saveProfile(newProfile);
-    setShowEditModal(false);
+    try {
+      const newProfile = { ...profile, name: editName, email: editEmail };
+      saveProfile(newProfile);
+      setShowEditModal(false);
+      Toast.show("Profile updated successfully! ✅", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: "#4CAF50",
+        textColor: "#FFF",
+      });
+    } catch (error: any) {
+      Toast.show("Failed to update profile. Please try again.", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: "#E53935",
+        textColor: "#FFF",
+      });
+    }
   };
 
   const handleChangePassword = () => {
@@ -168,9 +229,19 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
         onPress: async () => {
           try {
             await AsyncStorage.clear();
-            Alert.alert("Success", "All data has been cleared.");
-          } catch (error) {
-            Alert.alert("Error", "Failed to clear data.");
+            Toast.show("All data has been cleared successfully", {
+              duration: Toast.durations.SHORT,
+              position: Toast.positions.TOP,
+              backgroundColor: "#4CAF50",
+              textColor: "#FFF",
+            });
+          } catch (error: any) {
+            Toast.show("Failed to clear data. Please try again.", {
+              duration: Toast.durations.SHORT,
+              position: Toast.positions.TOP,
+              backgroundColor: "#E53935",
+              textColor: "#FFF",
+            });
           }
         },
       },
@@ -180,7 +251,19 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Logout", style: "destructive", onPress: onLogout },
+      { 
+        text: "Logout", 
+        style: "destructive", 
+        onPress: () => {
+          Toast.show("Logging out...", {
+            duration: Toast.durations.SHORT,
+            position: Toast.positions.TOP,
+            backgroundColor: "#6C5CE7",
+            textColor: "#FFF",
+          });
+          onLogout();
+        }
+      },
     ]);
   };
 
@@ -252,8 +335,8 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
           </Text>
         </View>
 
-        {/* Premium Status Card */}
-        <View style={[styles.premiumCard, { backgroundColor: cardBg }]}>
+        {/* Premium Status Card - PREMIUM LOGIC COMMENTED OUT - All features are now free */}
+        {/* <View style={[styles.premiumCard, { backgroundColor: cardBg }]}>
           {isPremium ? (
             <>
               <View style={styles.premiumBadgeContainer}>
@@ -305,7 +388,7 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
               </TouchableOpacity>
             </>
           )}
-        </View>
+        </View> */}
 
         {/* Stats */}
         <View style={styles.statsRow}>
@@ -399,7 +482,8 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
         </View>
 
         {/* Testing Panel - Only in dev mode */}
-        {__DEV__ && <PremiumTestPanel onStatusChange={refreshStatus} />}
+        {/* PREMIUM LOGIC COMMENTED OUT - All features are now free */}
+        {/* {__DEV__ && <PremiumTestPanel onStatusChange={refreshStatus} />} */}
 
         {/* Logout */}
         <TouchableOpacity

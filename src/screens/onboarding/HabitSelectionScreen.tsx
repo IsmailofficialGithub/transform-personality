@@ -13,7 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../../store/authStore';
 import { useHabitStore } from '../../store/habitStore';
-import { supabase } from '../../services/supabase';
+import { supabase } from '../../config/supabase';
 import { SIZES } from '../../utils/theme';
 import {
   HABIT_IMAGES,

@@ -19,7 +19,9 @@
       "@utils/*": ["src/utils/*"],
       "@store/*": ["src/store/*"],
       "@hooks/*": ["src/hooks/*"],
-      "@services/*": ["src/services/*"]
+      "@services/*": ["src/services/*"],
+      "@config/*": ["src/config/*"],
+      "@constants/*": ["src/constants/*"]
     }
   },
   "include": ["src", "App.tsx"],

@@ -18,14 +18,14 @@ import { useCommunityStore } from "../store/communityStore";
 import { usePremium } from "../hooks/usePremium";
 
 // Screens
-import { DashboardScreen } from "@screens/DashboardScreen";
-import { PanicButtonScreen } from "@screens/PanicButtonScreen";
-import { LogUrgeScreen } from "@screens/LogUrgeScreen";
-import { StatisticsScreen } from "@screens/StatisticsScreen";
-import { AchievementsScreen } from "@screens/AchievementsScreen";
-import { ProfileScreen } from "@screens/ProfileScreen";
+import { DashboardScreen } from "../screens/dashboard/DashboardScreen";
+import { PanicButtonScreen } from "../screens/tools/PanicButtonScreen";
+import { LogUrgeScreen } from "../screens/habits/LogUrgeScreen";
+import { StatisticsScreen } from "../screens/analytics/StatisticsScreen";
+import { AchievementsScreen } from "../screens/gamification/AchievementsScreen";
+import { ProfileScreen } from "../screens/profile/ProfileScreen";
 import { PartnerHomeScreen } from "../screens/accountability/PartnerHomeScreen";
-import { CommunityHub } from "../data/CommunityHub";
+import { CommunityHub } from "../screens/community/CommunityHub";
 import { CommunityFeedScreen } from "../screens/community/CommunityFeedScreen";
 import { CreatePostScreen } from "../screens/community/CreatePostScreen";
 import { PostDetailScreen } from "../screens/community/PostDetailScreen";
@@ -313,7 +313,8 @@ export const AppNavigator = ({ onLogout }: AppNavigatorProps) => {
 
       // 🎮 GAMES NAVIGATION
       case "games":
-        return <GamesHubScreen onNavigate={navigateTo} isPremium={isPremium} />;
+        // PREMIUM LOGIC COMMENTED OUT - All features are now free
+        return <GamesHubScreen onNavigate={navigateTo} isPremium={true} />;
 
       // FREE GAMES
       case "memory-match":

@@ -6,14 +6,15 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import Toast from 'react-native-root-toast';
 import { SIZES } from '../../utils/theme';
 import { useThemeStore } from '../../store/themeStore';
+import { supabase } from '../../config/supabase';
 import { Button as CustomButton } from '../../components/common/Button';
 
 interface ForgotPasswordScreenProps {
@@ -32,20 +33,54 @@ export const ForgotPasswordScreen = ({
 
   const handleResetPassword = async () => {
     if (!email) {
-      Alert.alert('Error', 'Please enter your email');
+      Toast.show('Please enter your email', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
       return;
     }
 
     if (!email.includes('@')) {
-      Alert.alert('Error', 'Please enter a valid email');
+      Toast.show('Please enter a valid email address', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: 'transform-app://reset-password',
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
       setSent(true);
-    }, 1500);
+      Toast.show('Password reset email sent! Check your inbox 📧', {
+        duration: Toast.durations.LONG,
+        position: Toast.positions.TOP,
+        backgroundColor: '#4CAF50',
+        textColor: '#FFF',
+      });
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      Toast.show(error.message || 'Failed to send reset email. Please try again.', {
+        duration: Toast.durations.LONG,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

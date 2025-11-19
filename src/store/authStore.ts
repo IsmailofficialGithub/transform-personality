@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { supabase } from "../services/supabase";
+import { supabase } from "../config/supabase";
 
 interface User {
   id: string;

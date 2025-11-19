@@ -44,12 +44,8 @@ export const GamesHubScreen = ({ onNavigate, isPremium }: GamesHubScreenProps) =
   }, []);
 
   const handleGamePress = (game: Game) => {
-    if (game.isPremium && !isPremium) {
-      onNavigate('premium');
-    } else {
-      // Navigate directly to the game screen
-      onNavigate(game.id);
-    }
+    // Navigate directly to the game screen - premium removed
+    onNavigate(game.id);
   };
 
   const getDifficultyColor = (difficulty: string): string => {
@@ -72,8 +68,10 @@ export const GamesHubScreen = ({ onNavigate, isPremium }: GamesHubScreenProps) =
   const subText = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
   const cardBg = isDark ? 'rgba(25,25,25,0.9)' : 'rgba(255,255,255,0.95)';
 
-  const freeGames = GAMES.filter(g => !g.isPremium);
-  const premiumGames = GAMES.filter(g => g.isPremium);
+  // PREMIUM LOGIC COMMENTED OUT - All features are now free
+  // const freeGames = GAMES.filter(g => !g.isPremium);
+  // const premiumGames = GAMES.filter(g => g.isPremium);
+  const allGames = GAMES; // Show all games - no premium restrictions
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#000' : '#F9F9F9' }]}>
@@ -101,19 +99,19 @@ export const GamesHubScreen = ({ onNavigate, isPremium }: GamesHubScreenProps) =
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: cardBg }]}>
             <Text style={[styles.statValue, { color: textColor }]}>
-              {freeGames.length}
+              {allGames.length}
             </Text>
             <Text style={[styles.statLabel, { color: subText }]}>
-              Free Games
+              Total Games
             </Text>
           </View>
 
           <View style={[styles.statCard, { backgroundColor: cardBg }]}>
             <Text style={[styles.statValue, { color: textColor }]}>
-              {premiumGames.length}
+              {GAMES.length}
             </Text>
             <Text style={[styles.statLabel, { color: subText }]}>
-              Premium Games
+              Total Games
             </Text>
           </View>
 
@@ -140,13 +138,13 @@ export const GamesHubScreen = ({ onNavigate, isPremium }: GamesHubScreenProps) =
           </View>
         </View>
 
-        {/* Free Games Section */}
+        {/* All Games Section - PREMIUM LOGIC COMMENTED OUT */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: textColor }]}>
-            🆓 Free Games
+            🎮 All Games
           </Text>
 
-          {freeGames.map((game) => (
+          {allGames.map((game) => (
             <TouchableOpacity
               key={game.id}
               style={[styles.gameCard, { backgroundColor: cardBg }]}
@@ -193,60 +191,27 @@ export const GamesHubScreen = ({ onNavigate, isPremium }: GamesHubScreenProps) =
           ))}
         </View>
 
-        {/* Premium Games Section */}
-        <View style={styles.section}>
-          <View style={styles.premiumHeader}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>
-              💎 Premium Games
-            </Text>
-            {!isPremium && (
-              <TouchableOpacity
-                style={styles.upgradeButton}
-                onPress={() => onNavigate('premium')}
-              >
-                <LinearGradient
-                  colors={['#FFD700', '#FFA500']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.upgradeGradient}
-                >
-                  <Text style={styles.upgradeText}>Upgrade</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            )}
-          </View>
+        {/* PREMIUM GAMES SECTION COMMENTED OUT - All games shown above */}
+        {/* <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: textColor }]}>
+            🎮 All Games
+          </Text>
 
           {premiumGames.map((game) => (
             <TouchableOpacity
               key={game.id}
-              style={[
-                styles.gameCard, 
-                { backgroundColor: cardBg },
-                !isPremium && styles.lockedCard
-              ]}
+              style={[styles.gameCard, { backgroundColor: cardBg }]}
               onPress={() => handleGamePress(game)}
               activeOpacity={0.7}
             >
               <View style={styles.gameHeader}>
-                <View style={[
-                  styles.gameIconContainer,
-                  !isPremium && styles.lockedIconContainer
-                ]}>
-                  <Text style={styles.gameIcon}>
-                    {isPremium ? game.icon : '🔒'}
-                  </Text>
+                <View style={styles.gameIconContainer}>
+                  <Text style={styles.gameIcon}>{game.icon}</Text>
                 </View>
                 <View style={styles.gameInfo}>
-                  <View style={styles.gameTitleRow}>
-                    <Text style={[styles.gameTitle, { color: textColor }]}>
-                      {game.title}
-                    </Text>
-                    {!isPremium && (
-                      <View style={styles.premiumBadge}>
-                        <Text style={styles.premiumBadgeText}>PRO</Text>
-                      </View>
-                    )}
-                  </View>
+                  <Text style={[styles.gameTitle, { color: textColor }]}>
+                    {game.title}
+                  </Text>
                   <Text style={[styles.gameDescription, { color: subText }]} numberOfLines={2}>
                     {game.description}
                   </Text>
@@ -277,7 +242,7 @@ export const GamesHubScreen = ({ onNavigate, isPremium }: GamesHubScreenProps) =
               </View>
             </TouchableOpacity>
           ))}
-        </View>
+        </View> */}
 
         {/* Benefits Section */}
         <View style={[styles.benefitsCard, { backgroundColor: cardBg }]}>

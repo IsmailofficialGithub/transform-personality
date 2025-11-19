@@ -7,10 +7,10 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import Toast from 'react-native-root-toast';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { Button as CustomButton } from '../../components/common/Button';
@@ -33,32 +33,16 @@ export const LoginScreen = ({
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [popup, setPopup] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const fadeAnim = new Animated.Value(0);
-
-  // Smooth popup animation
-  const showPopup = (type: 'success' | 'error', message: string) => {
-    setPopup({ type, message });
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      setTimeout(() => {
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => setPopup(null));
-      }, 1800);
-    });
-  };
 
   // 🔐 Login handler using Zustand Auth Store
   const handleLogin = async () => {
-    console.log('Button click');
     if (!email || !password) {
-      showPopup('error', 'Please enter both email and password.');
+      Toast.show('Please enter both email and password', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
       return;
     }
 
@@ -68,14 +52,30 @@ export const LoginScreen = ({
       console.log('User after login:', currentUser);
 
       if (currentUser) {
-        showPopup('success', `Welcome back, ${currentUser.full_name || 'User'} 🌟`);
-        setTimeout(onLogin, 1200);
+        Toast.show(`Welcome back, ${currentUser.full_name || 'User'}! 🌟`, {
+          duration: Toast.durations.LONG,
+          position: Toast.positions.TOP,
+          backgroundColor: '#4CAF50',
+          textColor: '#FFF',
+        });
+        setTimeout(onLogin, 1500);
       } else {
-        showPopup('error', 'Invalid credentials. Please try again.');
+        Toast.show('Invalid credentials. Please try again.', {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          backgroundColor: '#E53935',
+          textColor: '#FFF',
+        });
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      showPopup('error', error.message || 'Something went wrong.');
+      const errorMessage = error.message || 'Login failed. Please try again.';
+      Toast.show(errorMessage, {
+        duration: Toast.durations.LONG,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
     }
   };
 
@@ -152,21 +152,6 @@ export const LoginScreen = ({
           </View>
         </View>
       </KeyboardAvoidingView>
-
-      {/* Popup Notification */}
-      {popup && (
-        <Animated.View
-          style={[
-            styles.popup,
-            {
-              backgroundColor: popup.type === 'success' ? '#4CAF50' : '#E53935',
-              opacity: fadeAnim,
-            },
-          ]}
-        >
-          <Text style={styles.popupText}>{popup.message}</Text>
-        </Animated.View>
-      )}
     </LinearGradient>
   );
 };
@@ -206,14 +191,4 @@ const styles = StyleSheet.create({
   signupRow: { flexDirection: 'row', justifyContent: 'center' },
   signupText: { fontSize: 15 },
   signupLink: { fontWeight: 'bold' },
-  popup: {
-    position: 'absolute',
-    bottom: 50,
-    alignSelf: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    elevation: 5,
-  },
-  popupText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

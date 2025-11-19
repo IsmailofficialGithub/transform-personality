@@ -9,10 +9,10 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useHabitStore } from '../store/habitStore';
-import { useThemeStore } from '../store/themeStore';
-import { HABIT_NAMES } from '../utils/constants';
-import { SIZES } from '../utils/theme';
+import { useHabitStore } from '../../store/habitStore';
+import { useThemeStore } from '../../store/themeStore';
+import { HABIT_NAMES } from '../../utils/constants';
+import { SIZES } from '../../utils/theme';
 
 const { width } = Dimensions.get('window');
 

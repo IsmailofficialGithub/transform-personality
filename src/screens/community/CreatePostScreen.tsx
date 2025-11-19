@@ -19,7 +19,7 @@ import Toast from 'react-native-root-toast';
 import { useCommunityStore } from '../../store/communityStore';
 import { useThemeStore } from '../../store/themeStore';
 import { SIZES } from '../../utils/theme';
-import { validatePostTitle, validatePostContent } from '../../data/communitydata';
+import { validatePostTitle, validatePostContent } from '../../constants/community';
 import type { Screen } from '../../navigation/AppNavigator';
 
 interface CreatePostScreenProps {
@@ -230,13 +230,7 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <TouchableOpacity
-          onPress={onClose || (() => onNavigate?.('community' as Screen))}
-          style={styles.backButton}
-          disabled={submitting}
-        >
-          <Text style={styles.backButtonText}>← Cancel</Text>
-        </TouchableOpacity>
+        <View style={styles.headerSpacer} />
         <Text style={styles.headerTitle}>Create Post</Text>
         <TouchableOpacity
           onPress={handleSubmit}

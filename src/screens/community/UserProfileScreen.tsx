@@ -177,9 +177,7 @@ export const UserProfileScreen = ({ profileId, onNavigate, onBack }: UserProfile
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <TouchableOpacity onPress={onBack || (() => onNavigate?.('community' as Screen))} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
+        <View style={styles.headerSpacer} />
         <Text style={styles.headerTitle}>{isOwnProfile ? 'My Profile' : 'Profile'}</Text>
         {isOwnProfile && (
           <TouchableOpacity

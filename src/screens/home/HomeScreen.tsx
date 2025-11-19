@@ -9,7 +9,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { useAuthStore } from "../../store/authStore";
-import { supabase } from "../../services/supabase";
+import { supabase } from "../../config/supabase";
 import  HabitSelectionScreen  from "../onboarding/HabitSelectionScreen";
 import { PlusCircle } from "lucide-react-native";
 

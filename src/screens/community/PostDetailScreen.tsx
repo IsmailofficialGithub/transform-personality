@@ -10,12 +10,14 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { formatDistanceToNow } from 'date-fns';
 import Toast from 'react-native-root-toast';
 import { communityService } from '../../services/CommunityService';
+import { useCommunityStore } from '../../store/communityStore';
 import { useThemeStore } from '../../store/themeStore';
 import { SIZES } from '../../utils/theme';
 import type { CommunityPost, PostComment } from '../../services/CommunityService';
@@ -30,11 +32,16 @@ interface PostDetailScreenProps {
 export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScreenProps) => {
   const colors = useThemeStore((state) => state.colors);
   const isDark = useThemeStore((state) => state.isDark);
+  const { currentProfile } = useCommunityStore();
   const [post, setPost] = useState<CommunityPost | null>(null);
   const [comments, setComments] = useState<PostComment[]>([]);
   const [commentText, setCommentText] = useState('');
   const [loading, setLoading] = useState(true);
   const [commenting, setCommenting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [liking, setLiking] = useState(false);
+  
+  const isAuthor = post && currentProfile && post.author_id === currentProfile.id;
 
   useEffect(() => {
     const initializePost = async () => {
@@ -76,19 +83,29 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
   };
 
   const handleLike = async () => {
-    if (!post) return;
+    if (!post || liking) return; // Prevent double-clicks
+    
     try {
+      setLiking(true);
       const wasLiked = post.is_liked;
       setPost({ ...post, is_liked: !wasLiked, likes_count: wasLiked ? post.likes_count - 1 : post.likes_count + 1 });
       await communityService.togglePostLike(postId);
       const updatedPost = await communityService.getPost(postId);
       if (updatedPost) setPost(updatedPost);
     } catch (error: any) {
-      Toast.show('Failed to like post', { duration: Toast.durations.SHORT });
+      console.error('Error liking post:', error);
+      Toast.show(error.message || 'Failed to like post', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
       // Revert optimistic update
       if (post) {
         setPost({ ...post, is_liked: !post.is_liked, likes_count: post.is_liked ? post.likes_count + 1 : post.likes_count - 1 });
       }
+    } finally {
+      setLiking(false);
     }
   };
 
@@ -132,6 +149,38 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
     }
   };
 
+  const handleDeletePost = async () => {
+    if (!post) return;
+    
+    Alert.alert(
+      'Delete Post',
+      'Are you sure you want to delete this post? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeleting(true);
+              await communityService.deletePost(postId);
+              Toast.show('Post deleted successfully', { duration: Toast.durations.SHORT });
+              if (onBack) {
+                onBack();
+              } else if (onNavigate) {
+                onNavigate('community' as Screen);
+              }
+            } catch (error: any) {
+              Toast.show(error.message || 'Failed to delete post', { duration: Toast.durations.SHORT });
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: isDark ? colors.background : '#F5F5F5' }]}>
@@ -165,11 +214,22 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <TouchableOpacity onPress={onBack || (() => onNavigate?.('community' as Screen))} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Post</Text>
         <View style={styles.headerSpacer} />
+        <Text style={styles.headerTitle}>Post</Text>
+        {isAuthor && (
+          <TouchableOpacity
+            onPress={handleDeletePost}
+            disabled={deleting}
+            style={styles.deleteButton}
+          >
+            {deleting ? (
+              <ActivityIndicator color="#FFF" size="small" />
+            ) : (
+              <Text style={styles.deleteButtonText}>🗑️</Text>
+            )}
+          </TouchableOpacity>
+        )}
+        {!isAuthor && <View style={styles.headerSpacer} />}
       </LinearGradient>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
@@ -209,7 +269,12 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
 
           {/* Actions */}
           <View style={styles.postActions}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleLike} activeOpacity={0.7}>
+            <TouchableOpacity 
+              style={styles.actionButton} 
+              onPress={handleLike} 
+              activeOpacity={0.7}
+              disabled={liking}
+            >
               <Text style={[styles.actionIcon, { color: post.is_liked ? colors.error : colors.textSecondary }]}>
                 {post.is_liked ? '❤️' : '🤍'}
               </Text>
@@ -353,6 +418,15 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 60,
+  },
+  deleteButton: {
+    padding: 8,
+    minWidth: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteButtonText: {
+    fontSize: 20,
   },
   content: {
     flex: 1,

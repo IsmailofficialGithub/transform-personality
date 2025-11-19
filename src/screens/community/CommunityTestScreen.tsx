@@ -18,7 +18,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-root-toast';
 import { communityService } from '../../services/CommunityService';
-import { supabase } from '../../services/supabase';
+import { supabase } from '../../config/supabase';
 import { useThemeStore } from '../../store/themeStore';
 import { SIZES } from '../../utils/theme';
 

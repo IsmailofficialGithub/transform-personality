@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from "react-native-root-toast";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { AppNavigator } from "./src/navigation/AppNavigator";
 import { OnboardingController } from "./src/screens/onboarding/OnboardingController";
@@ -120,10 +121,23 @@ function AppContent() {
       // Clear local storage
       await AsyncStorage.removeItem("onboardingComplete");
       
+      Toast.show("Logged out successfully 👋", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: "#4CAF50",
+        textColor: "#FFF",
+      });
+      
       console.log("👋 Logged out successfully");
       setAppState("auth");
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Logout error:", error);
+      Toast.show(error.message || "Logout failed. Please try again.", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: "#E53935",
+        textColor: "#FFF",
+      });
       // Force logout anyway
       setAppState("auth");
     }

@@ -11,9 +11,10 @@ import {
   Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Toast from 'react-native-root-toast';
 import { useAuthStore } from '../../store/authStore';
 import { useHabitStore } from '../../store/habitStore';
-import { supabase } from '../../services/supabase';
+import { supabase } from '../../config/supabase';
 import {
   HABIT_IMAGES,
   HABIT_NAMES,
@@ -125,9 +126,22 @@ const HabitSelectionModal = ({
 
       if (onHabitsUpdated) onHabitsUpdated();
       onClose();
-    } catch (err) {
+      
+      Toast.show(`Successfully added ${selectedHabits.size} habit${selectedHabits.size > 1 ? 's' : ''}! 🎉`, {
+        duration: Toast.durations.LONG,
+        position: Toast.positions.TOP,
+        backgroundColor: '#4CAF50',
+        textColor: '#FFF',
+      });
+    } catch (err: any) {
       console.error('Error saving habit:', err);
-    }finally {
+      Toast.show(err.message || 'Failed to save habit. Please try again.', {
+        duration: Toast.durations.LONG,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
+    } finally {
       setloading(false);
     }
   };

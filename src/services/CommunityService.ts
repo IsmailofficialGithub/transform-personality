@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from '../config/supabase';
 // import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 // import { Platform } from 'react-native';
@@ -595,6 +595,7 @@ class CommunityService {
 
   /**
    * Like/Unlike post
+   * FIXED: Prevents duplicate likes by using upsert with conflict handling
    */
   async togglePostLike(postId: string): Promise<boolean> {
     try {
@@ -627,7 +628,24 @@ class CommunityService {
         return false; // now unliked
       }
   
-      // 4. If not liked → LIKE
+      // 4. If not liked → LIKE (double-check before insert to prevent race conditions)
+      // Double-check to prevent race conditions from rapid clicks
+      const { data: doubleCheck, error: checkError } = await supabase
+        .from("post_likes")
+        .select("id")
+        .eq("post_id", postId)
+        .eq("user_id", userId)
+        .maybeSingle();
+  
+      if (checkError) throw checkError;
+      
+      // If like was added between checks (race condition), return true
+      if (doubleCheck) {
+        console.log('⚠️ Like already exists (race condition prevented)');
+        return true;
+      }
+  
+      // Insert the like
       const { error: insertError } = await supabase
         .from("post_likes")
         .insert({
@@ -635,11 +653,31 @@ class CommunityService {
           user_id: userId,
         });
   
-      if (insertError) throw insertError;
+      // Handle duplicate key errors gracefully (unique constraint violation)
+      if (insertError) {
+        const isDuplicateError = 
+          insertError.code === '23505' || 
+          insertError.message?.includes('duplicate') || 
+          insertError.message?.includes('unique') || 
+          insertError.message?.includes('violates unique constraint') ||
+          insertError.message?.includes('already exists');
+        
+        if (isDuplicateError) {
+          console.log('⚠️ Duplicate like detected (unique constraint), ignoring...');
+          // Like already exists, just return true
+          return true;
+        }
+        throw insertError;
+      }
   
       return true; // now liked
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ togglePostLike Error:", error);
+      // If it's a duplicate error, just return true (like already exists)
+      if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+        console.log('⚠️ Duplicate like detected, ignoring...');
+        return true;
+      }
       throw error;
     }
   }

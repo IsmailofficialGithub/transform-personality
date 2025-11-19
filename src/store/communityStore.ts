@@ -162,19 +162,20 @@ export const useCommunityStore = create<CommunityStore>()(
 
       likePost: async (postId) => {
         try {
-          // Optimistic update
+          // Prevent duplicate calls - check if already processing
           const post = get().posts.find((p) => p.id === postId);
-          if (post) {
-            const wasLiked = post.is_liked;
-            const newLikesCount = wasLiked
-              ? post.likes_count - 1
-              : post.likes_count + 1;
+          if (!post) return;
 
-            get().updatePost(postId, {
-              is_liked: !wasLiked,
-              likes_count: newLikesCount,
-            });
-          }
+          // Optimistic update
+          const wasLiked = post.is_liked;
+          const newLikesCount = wasLiked
+            ? post.likes_count - 1
+            : post.likes_count + 1;
+
+          get().updatePost(postId, {
+            is_liked: !wasLiked,
+            likes_count: newLikesCount,
+          });
 
           // Toggle like
           await communityService.togglePostLike(postId);
@@ -188,6 +189,7 @@ export const useCommunityStore = create<CommunityStore>()(
             });
           }
         } catch (error: any) {
+          console.error('Error liking post:', error);
           // Revert optimistic update
           const post = get().posts.find((p) => p.id === postId);
           if (post) {
@@ -199,6 +201,7 @@ export const useCommunityStore = create<CommunityStore>()(
             });
           }
           set({ error: error.message || 'Failed to like post' });
+          throw error; // Re-throw to show toast in UI
         }
       },
 

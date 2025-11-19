@@ -26,40 +26,42 @@ export const usePremium = () => {
 
   const checkPremiumStatus = async () => {
     try {
+      // PREMIUM LOGIC COMMENTED OUT - All features are now free
       // Check local premium status (for testing)
-      const premiumStatusLocal = await AsyncStorage.getItem('premium_status');
-      const trialStart = await AsyncStorage.getItem('trial_start_date');
-      const subscriptionPlan = await AsyncStorage.getItem('subscription_plan');
+      // const premiumStatusLocal = await AsyncStorage.getItem('premium_status');
+      // const trialStart = await AsyncStorage.getItem('trial_start_date');
+      // const subscriptionPlan = await AsyncStorage.getItem('subscription_plan');
 
-      let isPremium = false;
-      let isTrialActive = false;
-      let trialDaysLeft = null;
+      // let isPremium = false;
+      // let isTrialActive = false;
+      // let trialDaysLeft = null;
 
-      // Check if trial is active
-      if (trialStart) {
-        const startDate = new Date(trialStart);
-        const now = new Date();
-        const diffTime = now.getTime() - startDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        const daysLeft = 3 - diffDays;
+      // // Check if trial is active
+      // if (trialStart) {
+      //   const startDate = new Date(trialStart);
+      //   const now = new Date();
+      //   const diffTime = now.getTime() - startDate.getTime();
+      //   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      //   const daysLeft = 3 - diffDays;
 
-        if (daysLeft > 0) {
-          isTrialActive = true;
-          trialDaysLeft = daysLeft;
-          isPremium = true;
-        }
-      }
+      //   if (daysLeft > 0) {
+      //     isTrialActive = true;
+      //     trialDaysLeft = daysLeft;
+      //     isPremium = true;
+      //   }
+      // }
 
-      // Check if has active subscription
-      if (premiumStatusLocal === 'true') {
-        isPremium = true;
-      }
+      // // Check if has active subscription
+      // if (premiumStatusLocal === 'true') {
+      //   isPremium = true;
+      // }
 
+      // Always return premium as true (all features free)
       setPremiumStatus({
-        isPremium,
-        isTrialActive,
-        trialDaysLeft,
-        subscriptionPlan,
+        isPremium: true, // Always true - all features are free
+        isTrialActive: false,
+        trialDaysLeft: null,
+        subscriptionPlan: null,
         expirationDate: null,
         loading: false,
       });

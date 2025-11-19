@@ -10,12 +10,12 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { SIZES, DARK_COLORS } from '../utils/theme';
-import { useThemeStore } from '../store/themeStore';
-import { notificationService } from '../services/notifications';
+import { SIZES, COLORS } from '../../utils/theme';
+import { useThemeStore } from '../../store/themeStore';
+import NotificationService from '../../services/NotificationService';
 
 export const PanicButtonScreen = () => {
-  const colors = useThemeStore((state) => state.colors) || DARK_COLORS;
+  const colors = useThemeStore((state: any) => state.colors) || COLORS;
   const [breathingPhase, setBreathingPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
   const [isBreathing, setIsBreathing] = useState(false);
   const [counter, setCounter] = useState(4);
@@ -59,10 +59,11 @@ export const PanicButtonScreen = () => {
     }
   }, [breathingPhase, isBreathing]);
 
-  const startBreathing = () => {
+  const startBreathing = async () => {
     setIsBreathing(true);
     Vibration.vibrate(100);
-    notificationService.sendImmediateSupport();
+    // Send immediate support notification
+    await NotificationService.sendUrgeWarning('panic-button');
   };
 
   const stopBreathing = () => {

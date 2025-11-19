@@ -12,10 +12,11 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import { SIZES, DARK_COLORS } from '../utils/theme';
-import { useThemeStore } from '../store/themeStore';
-import { useHabitStore } from '../store/habitStore';
-import { HABIT_NAMES } from '../utils/constants';
+import Toast from 'react-native-root-toast';
+import { SIZES, COLORS } from '../../utils/theme';
+import { useThemeStore } from '../../store/themeStore';
+import { useHabitStore } from '../../store/habitStore';
+import { HABIT_NAMES } from '../../utils/constants';
 
 interface LogUrgeScreenProps {
   habitId?: string;
@@ -65,30 +66,61 @@ export const LogUrgeScreen: React.FC<LogUrgeScreenProps> = ({ habitId, onComplet
 
   const handleSubmit = () => {
     if (!selectedHabitId) {
-      Alert.alert('Required', 'Please select a habit');
+      Toast.show('Please select a habit', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
       return;
     }
 
     if (overcome === null) {
-      Alert.alert('Required', 'Please select if you overcame the urge or not');
+      Toast.show('Please select if you overcame the urge or not', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
       return;
     }
 
-    logUrge({
-      habitId: selectedHabitId,
-      intensity,
-      trigger: selectedTriggers.join(', '),
-      notes,
-      overcome,
-    });
+    try {
+      logUrge({
+        habitId: selectedHabitId,
+        intensity,
+        trigger: selectedTriggers.join(', '),
+        notes,
+        overcome,
+      });
 
-    Alert.alert(
-      overcome ? '🎉 Great Job!' : '💪 Keep Going',
-      overcome
-        ? 'You successfully overcame this urge. Keep up the great work!'
-        : "It's okay. Every day is a new opportunity to try again.",
-      [{ text: 'OK', onPress: onComplete }]
-    );
+      if (overcome) {
+        Toast.show('🎉 Great job! You overcame this urge! Keep it up!', {
+          duration: Toast.durations.LONG,
+          position: Toast.positions.TOP,
+          backgroundColor: '#4CAF50',
+          textColor: '#FFF',
+        });
+      } else {
+        Toast.show('💪 Keep going! Every day is a new opportunity.', {
+          duration: Toast.durations.LONG,
+          position: Toast.positions.TOP,
+          backgroundColor: '#FF9800',
+          textColor: '#FFF',
+        });
+      }
+
+      setTimeout(() => {
+        if (onComplete) onComplete();
+      }, 1500);
+    } catch (error: any) {
+      Toast.show('Failed to log urge. Please try again.', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
+    }
   };
 
   if (habits.length === 0) {

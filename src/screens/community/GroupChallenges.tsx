@@ -35,10 +35,11 @@ export const GroupChallenges = ({ onNavigate }: GroupChallengesProps) => {
   const cardBg = isDark ? 'rgba(25,25,25,0.9)' : 'rgba(255,255,255,0.95)';
 
   const handleJoinChallenge = (groupId: string, isPremium: boolean) => {
-    if (isPremium && !isPremium) {
-      onNavigate?.('premium');
-      return;
-    }
+    // PREMIUM LOGIC COMMENTED OUT - All features are now free
+    // if (isPremium && !isPremium) {
+    //   onNavigate?.('premium');
+    //   return;
+    // }
     setJoinedChallenges(new Set([...joinedChallenges, groupId]));
   };
 
@@ -74,11 +75,12 @@ export const GroupChallenges = ({ onNavigate }: GroupChallengesProps) => {
                     <Text style={[styles.challengeName, { color: textColor }]}>
                       {group.name}
                     </Text>
-                    {group.isPremium && (
+                    {/* PREMIUM LOGIC COMMENTED OUT - All features are now free */}
+                    {/* {group.isPremium && (
                       <View style={styles.premiumBadge}>
                         <Text style={styles.premiumText}>PRO</Text>
                       </View>
-                    )}
+                    )} */}
                   </View>
                   <Text style={[styles.challengeDesc, { color: subText }]} numberOfLines={2}>
                     {group.description}

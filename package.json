@@ -85,6 +85,7 @@
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-preset-expo": "^54.0.6",
     "expo-module-scripts": "^5.0.7",
+    "react-refresh": "^0.18.0",
     "typescript": "~5.9.2"
   },
   "private": true

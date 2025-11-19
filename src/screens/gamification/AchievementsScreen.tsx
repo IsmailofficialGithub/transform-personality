@@ -9,10 +9,10 @@ import {
   Easing,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SIZES } from '../utils/theme';
-import { useHabitStore } from '../store/habitStore';
-import { useThemeStore } from '../store/themeStore';
-import { ACHIEVEMENT_MILESTONES } from '../utils/constants';
+import { SIZES } from '../../utils/theme';
+import { useHabitStore } from '../../store/habitStore';
+import { useThemeStore } from '../../store/themeStore';
+import { ACHIEVEMENT_MILESTONES } from '../../utils/constants';
 
 const ACHIEVEMENT_IMAGES = {
   locked: 'https://images.unsplash.com/photo-1614851099175-e5b30eb6f696?w=400',
@@ -32,7 +32,7 @@ interface Achievement {
 
 export const AchievementsScreen = () => {
   const { habits } = useHabitStore();
-  const colors = useThemeStore((state) => state.colors);
+  const colors = useThemeStore((state: any) => state.colors);
   const isDark = useThemeStore((state) => state.isDark);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [progressAnim] = useState(new Animated.Value(0));

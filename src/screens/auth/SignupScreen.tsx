@@ -7,12 +7,11 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ScrollView,
-  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import Toast from 'react-native-root-toast';
 
 // Stores & Utils
 import { useThemeStore } from '../../store/themeStore';
@@ -36,43 +35,43 @@ export const SignupScreen = ({ onSignup, onBackToLogin }: SignupScreenProps) => 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [popup, setPopup] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const fadeAnim = new Animated.Value(0);
-
-  // Smooth popup animation
-  const showPopup = (type: 'success' | 'error', message: string) => {
-    setPopup({ type, message });
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      setTimeout(() => {
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => setPopup(null));
-      }, 2000);
-    });
-  };
 
   const handleSignup = async () => {
     // Validation
     if (!name || !email || !password || !confirmPassword) {
-      showPopup('error', 'Please fill in all fields');
+      Toast.show('Please fill in all fields', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
       return;
     }
     if (!email.includes('@')) {
-      showPopup('error', 'Please enter a valid email');
+      Toast.show('Please enter a valid email address', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
       return;
     }
     if (password.length < 6) {
-      showPopup('error', 'Password must be at least 6 characters');
+      Toast.show('Password must be at least 6 characters', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
       return;
     }
     if (password !== confirmPassword) {
-      showPopup('error', 'Passwords do not match');
+      Toast.show('Passwords do not match', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
       return;
     }
 
@@ -80,7 +79,12 @@ export const SignupScreen = ({ onSignup, onBackToLogin }: SignupScreenProps) => 
       // Call Supabase signup through Zustand store
       await signUp(email, password, name);
       
-      showPopup('success', 'Account created successfully! 🎉');
+      Toast.show('Account created successfully! 🎉', {
+        duration: Toast.durations.LONG,
+        position: Toast.positions.TOP,
+        backgroundColor: '#4CAF50',
+        textColor: '#FFF',
+      });
       
       // AuthNavigator will handle navigation via useEffect
       // No need to call onSignup() - user state will trigger navigation
@@ -88,14 +92,28 @@ export const SignupScreen = ({ onSignup, onBackToLogin }: SignupScreenProps) => 
       console.error('Signup error:', error);
       
       // Handle specific Supabase errors
-      if (error.message?.includes('already registered')) {
-        showPopup('error', 'This email is already registered');
+      let errorMessage = 'Signup failed. Please try again.';
+      if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
+        errorMessage = 'This email is already registered';
       } else if (error.message?.includes('Email confirmation')) {
-        showPopup('success', 'Please check your email to confirm your account');
+        Toast.show('Please check your email to confirm your account', {
+          duration: Toast.durations.LONG,
+          position: Toast.positions.TOP,
+          backgroundColor: '#4CAF50',
+          textColor: '#FFF',
+        });
         setTimeout(onBackToLogin, 2000);
-      } else {
-        showPopup('error', error.message || 'Signup failed. Please try again.');
+        return;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+      
+      Toast.show(errorMessage, {
+        duration: Toast.durations.LONG,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
     }
   };
 
@@ -202,21 +220,6 @@ export const SignupScreen = ({ onSignup, onBackToLogin }: SignupScreenProps) => 
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      {/* Popup Notification */}
-      {popup && (
-        <Animated.View
-          style={[
-            styles.popup,
-            {
-              backgroundColor: popup.type === 'success' ? '#4CAF50' : '#E53935',
-              opacity: fadeAnim,
-            },
-          ]}
-        >
-          <Text style={styles.popupText}>{popup.message}</Text>
-        </Animated.View>
-      )}
     </LinearGradient>
   );
 };
@@ -281,19 +284,5 @@ const styles = StyleSheet.create({
   loginLink: {
     fontWeight: 'bold',
     fontSize: 15,
-  },
-  popup: {
-    position: 'absolute',
-    bottom: 50,
-    alignSelf: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    elevation: 5,
-  },
-  popupText: { 
-    color: '#fff', 
-    fontSize: 16, 
-    fontWeight: '600' 
   },
 });

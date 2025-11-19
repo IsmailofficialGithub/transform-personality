@@ -14,9 +14,11 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { formatDistanceToNow } from 'date-fns';
 import Toast from 'react-native-root-toast';
+import { Alert } from 'react-native';
 import { useCommunityStore } from '../../store/communityStore';
 import { useThemeStore } from '../../store/themeStore';
 import { SIZES, COLORS } from '../../utils/theme';
+import { communityService } from '../../services/CommunityService';
 import type { CommunityPost } from '../../services/CommunityService';
 import type { Screen } from '../../navigation/AppNavigator';
 
@@ -43,13 +45,16 @@ export const CommunityFeedScreen = ({ onNavigate }: CommunityFeedScreenProps) =>
     hasMorePosts,
     currentPage,
     selectedCategory,
+    currentProfile,
     loadFeed,
     refreshFeed,
     likePost,
     setSelectedCategory,
+    removePost,
   } = useCommunityStore();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadFeed(0, selectedCategory || null, false);
@@ -73,10 +78,27 @@ export const CommunityFeedScreen = ({ onNavigate }: CommunityFeedScreenProps) =>
   }, [loading, hasMorePosts, currentPage, selectedCategory, loadFeed]);
 
   const handleLike = async (postId: string) => {
+    // Prevent double-clicks
+    if (likingPosts.has(postId)) {
+      return;
+    }
+
     try {
+      setLikingPosts(prev => new Set(prev).add(postId));
       await likePost(postId);
-    } catch (err) {
-      Toast.show('Failed to like post', { duration: Toast.durations.SHORT });
+    } catch (err: any) {
+      Toast.show(err.message || 'Failed to like post', {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        backgroundColor: '#E53935',
+        textColor: '#FFF',
+      });
+    } finally {
+      setLikingPosts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(postId);
+        return newSet;
+      });
     }
   };
 
@@ -88,9 +110,34 @@ export const CommunityFeedScreen = ({ onNavigate }: CommunityFeedScreenProps) =>
     }
   };
 
+  const handleDeletePost = async (postId: string, e: any) => {
+    e.stopPropagation();
+    Alert.alert(
+      'Delete Post',
+      'Are you sure you want to delete this post? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await communityService.deletePost(postId);
+              removePost(postId);
+              Toast.show('Post deleted successfully', { duration: Toast.durations.SHORT });
+            } catch (error: any) {
+              Toast.show(error.message || 'Failed to delete post', { duration: Toast.durations.SHORT });
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderPost = ({ item }: { item: CommunityPost }) => {
     const timeAgo = formatDistanceToNow(new Date(item.created_at), { addSuffix: true });
     const author = item.author;
+    const isAuthor = currentProfile && item.author_id === currentProfile.id;
 
     return (
       <TouchableOpacity
@@ -138,25 +185,36 @@ export const CommunityFeedScreen = ({ onNavigate }: CommunityFeedScreenProps) =>
               </Text>
             </View>
           </View>
-          <View
-            style={[
-              styles.categoryBadge,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(108, 92, 231, 0.2)'
-                  : 'rgba(108, 92, 231, 0.1)',
-              },
-            ]}
-          >
-            <Text
+          <View style={styles.headerRight}>
+            <View
               style={[
-                styles.categoryText,
-                { color: colors.primary },
+                styles.categoryBadge,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(108, 92, 231, 0.2)'
+                    : 'rgba(108, 92, 231, 0.1)',
+                },
               ]}
             >
-              {CATEGORIES.find((c) => c.id === item.category)?.emoji}{' '}
-              {item.category}
-            </Text>
+              <Text
+                style={[
+                  styles.categoryText,
+                  { color: colors.primary },
+                ]}
+              >
+                {CATEGORIES.find((c) => c.id === item.category)?.emoji}{' '}
+                {item.category}
+              </Text>
+            </View>
+            {isAuthor && (
+              <TouchableOpacity
+                onPress={(e) => handleDeletePost(item.id, e)}
+                style={styles.deleteButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Text style={styles.deleteButtonText}>🗑️</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -208,6 +266,7 @@ export const CommunityFeedScreen = ({ onNavigate }: CommunityFeedScreenProps) =>
             style={styles.actionButton}
             onPress={() => handleLike(item.id)}
             activeOpacity={0.7}
+            disabled={likingPosts.has(item.id)}
           >
             <Text style={[styles.actionIcon, { color: item.is_liked ? colors.error : colors.textSecondary }]}>
               {item.is_liked ? '❤️' : '🤍'}
@@ -302,8 +361,10 @@ export const CommunityFeedScreen = ({ onNavigate }: CommunityFeedScreenProps) =>
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <Text style={styles.headerTitle}>Community</Text>
-        <Text style={styles.headerSubtitle}>Connect & Support Each Other</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Community</Text>
+          <Text style={styles.headerSubtitle}>Connect & Support Each Other</Text>
+        </View>
       </LinearGradient>
 
       {/* Category Filters */}
@@ -407,18 +468,24 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 50,
-    paddingBottom: 20,
+    paddingBottom: 24,
     paddingHorizontal: SIZES.padding,
+  },
+  headerContent: {
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: SIZES.h1,
     fontWeight: '800',
     color: '#FFF',
-    marginBottom: 4,
+    marginBottom: 6,
+    textAlign: 'center',
   },
   headerSubtitle: {
     fontSize: SIZES.body,
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.95)',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   categoriesContainer: {
     maxHeight: 60,
@@ -460,6 +527,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  deleteButton: {
+    padding: 4,
+  },
+  deleteButtonText: {
+    fontSize: 18,
   },
   authorInfo: {
     flexDirection: 'row',
