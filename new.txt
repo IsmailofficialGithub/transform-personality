@@ -1,0 +1,9 @@
+commit and post delte
+notification icon
+chnage ui of comunity page
+dashboard new notification[on clikc detais page]
+remove multiple back button
+better ui 
+check progress pages
+remove premiumes
+makegame better 
