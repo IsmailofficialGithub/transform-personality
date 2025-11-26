@@ -1,7 +1,5 @@
 import { supabase } from '../config/supabase';
-// import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-// import { Platform } from 'react-native';
 
 // ============================================
 // TYPES
@@ -123,7 +121,7 @@ async function uploadImage(
 ): Promise<string> {
   try {
     const compressedUri = await compressImage(uri);
-    
+
     // Get file extension and create filename
     const fileExt = uri.split('.').pop() || 'jpg';
     const fileName = `${path}/${Date.now()}.${fileExt}`;
@@ -131,7 +129,7 @@ async function uploadImage(
 
     // Read file as base64
     const base64 = await FileSystem.readAsStringAsync(compressedUri, {
-      encoding: FileSystem.EncodingType.Base64,
+      encoding: 'base64',
     });
 
     // Convert base64 to blob for Supabase
@@ -179,12 +177,10 @@ class CommunityService {
       if (!user) return null;
 
       const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();   
-      console.log('👤 Getting current user profile:', user.id);
-
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
 
       if (error) throw error;
       return data;
@@ -280,7 +276,7 @@ class CommunityService {
       if (!user) throw new Error('Not authenticated');
 
       const url = await uploadImage(imageUri, 'avatars', user.id);
-      
+
       // Update profile with new avatar URL
       const profile = await this.getCurrentUserProfile();
       if (profile) {
@@ -390,19 +386,25 @@ class CommunityService {
     }
   }
 
-  async getUserPosts( params: PaginationParams = {}): Promise<CommunityPost[]> {
+  /**
+   * Get posts by user
+   */
+  async getUserPosts(params: PaginationParams = {}): Promise<CommunityPost[]> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const profile = await this.getCurrentUserProfile();
+      if (!profile) return [];
+
       const page = params.page || 0;
       const limit = params.limit || 20;
       const offset = page * limit;
+
       const { data, error } = await supabase
         .from('community_posts')
         .select(`
           *,
           author:user_profiles!community_posts_author_id_fkey(*)
         `)
-        .eq('author_id', user?.id)
+        .eq('author_id', profile.id)
         .eq('is_deleted', false)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
@@ -410,6 +412,7 @@ class CommunityService {
       if (error) throw error;
 
       // Check if user liked each post
+      const { data: { user } } = await supabase.auth.getUser();
       if (user && data) {
         const postIds = data.map(p => p.id);
         const { data: likes } = await supabase
@@ -431,9 +434,9 @@ class CommunityService {
       throw error;
     }
   }
+
   /**
    * Create new post
-   * FIXED: Now correctly uses profile.id for author_id
    */
   async createPost(
     post: {
@@ -445,7 +448,7 @@ class CommunityService {
   ): Promise<CommunityPost> {
     try {
       console.log('📝 CommunityService.createPost called with:', post);
-      
+
       const profile = await this.getCurrentUserProfile();
       if (!profile) {
         throw new Error('Profile not found. Please create your profile first.');
@@ -475,11 +478,11 @@ class CommunityService {
 
       console.log('💾 Inserting post into database...');
       console.log('💾 Using author_id (profile.id):', profile.id);
-      
+
       const { data, error } = await supabase
         .from('community_posts')
         .insert({
-          author_id: profile.id, // ✅ FIXED: Use profile.id (references user_profiles.id)
+          author_id: profile.id,
           title: post.title,
           content: post.content,
           category: post.category,
@@ -493,17 +496,10 @@ class CommunityService {
 
       if (error) {
         console.error('❌ Supabase insert error:', error);
-        console.error('❌ Error details:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-        });
         throw error;
       }
 
       if (!data) {
-        console.error('❌ No data returned from insert');
         throw new Error('Failed to create post - no data returned');
       }
 
@@ -524,7 +520,6 @@ class CommunityService {
 
   /**
    * Update post
-   * FIXED: Now correctly checks author_id against profile.id
    */
   async updatePost(
     postId: string,
@@ -556,7 +551,7 @@ class CommunityService {
         .from('community_posts')
         .update(updateData)
         .eq('id', postId)
-        .eq('author_id', profile.id) // ✅ FIXED: Use profile.id
+        .eq('author_id', profile.id)
         .select(`
           *,
           author:user_profiles!community_posts_author_id_fkey(*)
@@ -573,7 +568,6 @@ class CommunityService {
 
   /**
    * Delete post
-   * FIXED: Now correctly checks author_id against profile.id
    */
   async deletePost(postId: string): Promise<void> {
     try {
@@ -584,7 +578,7 @@ class CommunityService {
         .from('community_posts')
         .update({ is_deleted: true })
         .eq('id', postId)
-        .eq('author_id', profile.id) // ✅ FIXED: Use profile.id
+        .eq('author_id', profile.id);
 
       if (error) throw error;
     } catch (error) {
@@ -595,56 +589,52 @@ class CommunityService {
 
   /**
    * Like/Unlike post
-   * FIXED: Prevents duplicate likes by using upsert with conflict handling
    */
   async togglePostLike(postId: string): Promise<boolean> {
     try {
       // 1. Get current user
       const profile = await this.getCurrentUserProfile();
       if (!profile) throw new Error("User not logged in");
-  
+
       const userId = profile.user_id;
-  
+
       // 2. Check if like already exists
       const { data: likeRows, error: selectError } = await supabase
         .from("post_likes")
         .select("id")
         .eq("post_id", postId)
         .eq("user_id", userId);
-  
+
       if (selectError) throw selectError;
-  
+
       const existingLike = likeRows?.[0];
-  
+
       // 3. If already liked → UNLIKE
       if (existingLike) {
         const { error: deleteError } = await supabase
           .from("post_likes")
           .delete()
           .eq("id", existingLike.id);
-  
+
         if (deleteError) throw deleteError;
-  
+
         return false; // now unliked
       }
-  
+
       // 4. If not liked → LIKE (double-check before insert to prevent race conditions)
-      // Double-check to prevent race conditions from rapid clicks
       const { data: doubleCheck, error: checkError } = await supabase
         .from("post_likes")
         .select("id")
         .eq("post_id", postId)
         .eq("user_id", userId)
         .maybeSingle();
-  
+
       if (checkError) throw checkError;
-      
-      // If like was added between checks (race condition), return true
+
       if (doubleCheck) {
-        console.log('⚠️ Like already exists (race condition prevented)');
         return true;
       }
-  
+
       // Insert the like
       const { error: insertError } = await supabase
         .from("post_likes")
@@ -652,36 +642,29 @@ class CommunityService {
           post_id: postId,
           user_id: userId,
         });
-  
-      // Handle duplicate key errors gracefully (unique constraint violation)
+
       if (insertError) {
-        const isDuplicateError = 
-          insertError.code === '23505' || 
-          insertError.message?.includes('duplicate') || 
-          insertError.message?.includes('unique') || 
-          insertError.message?.includes('violates unique constraint') ||
-          insertError.message?.includes('already exists');
-        
+        const isDuplicateError =
+          insertError.code === '23505' ||
+          insertError.message?.includes('duplicate') ||
+          insertError.message?.includes('unique');
+
         if (isDuplicateError) {
-          console.log('⚠️ Duplicate like detected (unique constraint), ignoring...');
-          // Like already exists, just return true
           return true;
         }
         throw insertError;
       }
-  
+
       return true; // now liked
     } catch (error: any) {
       console.error("❌ togglePostLike Error:", error);
-      // If it's a duplicate error, just return true (like already exists)
-      if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
-        console.log('⚠️ Duplicate like detected, ignoring...');
+      if (error.code === '23505' || error.message?.includes('duplicate')) {
         return true;
       }
       throw error;
     }
   }
-  
+
   // ============================================
   // COMMENTS
   // ============================================
@@ -731,7 +714,6 @@ class CommunityService {
 
   /**
    * Add comment to post
-   * FIXED: Now correctly uses profile.id for author_id
    */
   async addComment(
     postId: string,
@@ -741,7 +723,7 @@ class CommunityService {
     try {
       const profile = await this.getCurrentUserProfile();
       if (!profile) throw new Error('Profile not found');
-  
+
       const { data, error } = await supabase
         .from('post_comments')
         .insert({
@@ -755,23 +737,17 @@ class CommunityService {
           author:user_profiles!post_comments_author_id_fkey(*)
         `)
         .single();
-  
+
       if (error) throw error;
-  
-      // Increment comments_count once
-      const { error: incrementError } = await supabase.rpc('increment_post_comments_count', { post_id_input: postId });
-      if (incrementError) console.error('Error incrementing post comments_count:', incrementError);
-  
       return data;
     } catch (error) {
       console.error('Error adding comment:', error);
       throw error;
     }
   }
-  
+
   /**
    * Update comment
-   * FIXED: Now correctly checks author_id against profile.id
    */
   async updateComment(
     commentId: string,
@@ -785,7 +761,7 @@ class CommunityService {
         .from('post_comments')
         .update({ content })
         .eq('id', commentId)
-        .eq('author_id', profile.id) // ✅ FIXED: Use profile.id
+        .eq('author_id', profile.id)
         .select(`
           *,
           author:user_profiles!post_comments_author_id_fkey(*)
@@ -802,7 +778,6 @@ class CommunityService {
 
   /**
    * Delete comment
-   * FIXED: Now correctly checks author_id against profile.id
    */
   async deleteComment(commentId: string): Promise<void> {
     try {
@@ -813,7 +788,7 @@ class CommunityService {
         .from('post_comments')
         .update({ is_deleted: true })
         .eq('id', commentId)
-        .eq('author_id', profile.id) // ✅ FIXED: Use profile.id
+        .eq('author_id', profile.id);
 
       if (error) throw error;
     } catch (error) {
@@ -829,7 +804,7 @@ class CommunityService {
     try {
       const profile = await this.getCurrentUserProfile();
       if (!profile) throw new Error("Profile not found");
-  
+
       // Check if user already liked the comment
       const { data: existingLike, error: selectError } = await supabase
         .from("comment_likes")
@@ -837,63 +812,40 @@ class CommunityService {
         .eq("comment_id", commentId)
         .eq("user_id", profile.user_id)
         .maybeSingle();
-  
+
       if (selectError) throw selectError;
-  
-      // ------------------------
-      // CASE 1: Unlike (remove)
-      // ------------------------
+
       if (existingLike) {
+        // Unlike
         const { error: deleteError } = await supabase
           .from("comment_likes")
           .delete()
           .eq("id", existingLike.id);
-  
+
         if (deleteError) throw deleteError;
-  
-        // decrement like count
-        const { error: decError } = await supabase.rpc(
-          "decrement_comment_count",
-          { comment_id: commentId }
-        );
-  
-        if (decError) throw decError;
-  
-        return false; // now unliked
+        return false;
       }
-  
-      // ------------------------
-      // CASE 2: Like (add)
-      // ------------------------
-      const { error: insertError } = await supabase.from("comment_likes").insert({
-        comment_id: commentId,
-        user_id: profile.user_id,
-      });
-  
+
+      // Like
+      const { error: insertError } = await supabase
+        .from("comment_likes")
+        .insert({
+          comment_id: commentId,
+          user_id: profile.user_id,
+        });
+
       if (insertError) throw insertError;
-  
-      // increment like count
-      const { error: incError } = await supabase.rpc(
-        "increment_comment_count",
-        { comment_id: commentId }
-      );
-  
-      if (incError) throw incError;
-  
-      return true; // now liked
+      return true;
     } catch (error) {
       console.error("Error toggling comment like:", error);
       throw error;
     }
   }
 
-
   async incrementPostViews(postId: string): Promise<void> {
     const { error } = await supabase.rpc('increment_post_views', { post_id_input: postId });
     if (error) throw error;
   }
-  
-  
 
   // ============================================
   // SUCCESS STORIES
@@ -945,48 +897,47 @@ class CommunityService {
 
   /**
    * Create success story
-   * FIXED: Now correctly uses profile.id for author_id
    */
-  async createSuccessStory(
-    story: {
-      title: string;
-      story: string;
-      days_clean: number;
-      before_image_url?: string;
-      after_image_url?: string;
-      additional_images?: string[];
-    }
-  ): Promise<SuccessStory> {
+  async createSuccessStory(story: {
+    title: string;
+    story: string;
+    days_clean: number;
+    before_image_uri?: string;
+    after_image_uri?: string;
+    additional_images?: string[];
+  }): Promise<SuccessStory> {
     try {
       const profile = await this.getCurrentUserProfile();
       if (!profile) throw new Error('Profile not found');
 
-      // Upload images if provided
-      let beforeUrl: string | undefined;
-      let afterUrl: string | undefined;
+      // Upload images
+      let beforeUrl = null;
+      let afterUrl = null;
       let additionalUrls: string[] = [];
 
-      if (story.before_image_url) {
-        beforeUrl = await uploadImage(story.before_image_url, 'success-stories', profile.user_id);
+      if (story.before_image_uri) {
+        beforeUrl = await uploadImage(story.before_image_uri, 'story-images', profile.user_id);
       }
-      if (story.after_image_url) {
-        afterUrl = await uploadImage(story.after_image_url, 'success-stories', profile.user_id);
+
+      if (story.after_image_uri) {
+        afterUrl = await uploadImage(story.after_image_uri, 'story-images', profile.user_id);
       }
+
       if (story.additional_images && story.additional_images.length > 0) {
         additionalUrls = await Promise.all(
-          story.additional_images.map(uri => uploadImage(uri, 'success-stories', profile.user_id))
+          story.additional_images.map(uri => uploadImage(uri, 'story-images', profile.user_id))
         );
       }
 
       const { data, error } = await supabase
         .from('success_stories')
         .insert({
-          author_id: profile.id, // ✅ FIXED: Use profile.id
+          author_id: profile.id,
           title: story.title,
           story: story.story,
           days_clean: story.days_clean,
-          before_image_url: beforeUrl || null,
-          after_image_url: afterUrl || null,
+          before_image_url: beforeUrl,
+          after_image_url: afterUrl,
           additional_images: additionalUrls.length > 0 ? additionalUrls : null,
         })
         .select(`
@@ -1008,19 +959,22 @@ class CommunityService {
   // ============================================
 
   /**
-   * Follow/Unfollow user
+   * Toggle follow user
    */
   async toggleFollow(profileId: string): Promise<boolean> {
     try {
       const profile = await this.getCurrentUserProfile();
       if (!profile) throw new Error('Profile not found');
 
-      const { data: existingFollow } = await supabase
+      // Check if already following
+      const { data: existingFollow, error: selectError } = await supabase
         .from('user_followers')
         .select('id')
         .eq('follower_id', profile.user_id)
         .eq('following_id', profileId)
-        .single();
+        .maybeSingle();
+
+      if (selectError) throw selectError;
 
       if (existingFollow) {
         // Unfollow

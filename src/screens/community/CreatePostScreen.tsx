@@ -16,24 +16,39 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-root-toast';
+import {
+  Camera,
+  Image as ImageIcon,
+  X,
+  ClipboardList,
+  ArrowLeft,
+  PartyPopper,
+  HeartHandshake,
+  HelpCircle,
+  Flame,
+  MessageCircle,
+  Globe
+} from 'lucide-react-native';
 import { useCommunityStore } from '../../store/communityStore';
 import { useThemeStore } from '../../store/themeStore';
 import { SIZES } from '../../utils/theme';
-import { validatePostTitle, validatePostContent } from '../../constants/community';
+import { validatePostTitle, validatePostContent, POST_CATEGORIES } from '../../constants/community';
 import type { Screen } from '../../navigation/AppNavigator';
+
+// Icon mapping for dynamic rendering
+const IconMap: Record<string, any> = {
+  PartyPopper,
+  HeartHandshake,
+  HelpCircle,
+  Flame,
+  MessageCircle,
+  Globe,
+};
 
 interface CreatePostScreenProps {
   onNavigate?: (screen: Screen) => void;
   onClose?: () => void;
 }
-
-const CATEGORIES = [
-  { id: 'success', label: 'Success', emoji: '🎉' },
-  { id: 'support', label: 'Support', emoji: '💪' },
-  { id: 'question', label: 'Question', emoji: '❓' },
-  { id: 'motivation', label: 'Motivation', emoji: '🔥' },
-  { id: 'general', label: 'General', emoji: '💬' },
-] as const;
 
 export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps) => {
   const colors = useThemeStore((state) => state.colors);
@@ -42,7 +57,7 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState<typeof CATEGORIES[number]['id']>('general');
+  const [category, setCategory] = useState<'success' | 'support' | 'question' | 'motivation' | 'general'>('general');
   const [images, setImages] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -148,12 +163,12 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
       const newPost = await createPost(postData);
 
       console.log('✅ Post created successfully!', newPost?.id);
-      
-      Toast.show('Post created successfully! 🎉', { 
+
+      Toast.show('Post created successfully! 🎉', {
         duration: Toast.durations.LONG,
         position: Toast.positions.TOP,
       });
-      
+
       // Reset form
       setTitle('');
       setContent('');
@@ -171,19 +186,13 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
 
     } catch (error: any) {
       console.error('❌ Error creating post:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-      });
-      
+
       let errorMessage = 'Failed to create post';
-      
+
       if (error.message) {
         errorMessage = error.message;
       }
-      
+
       // Handle specific error cases
       if (error.code === 'PGRST116') {
         errorMessage = 'Please complete your profile first';
@@ -194,12 +203,12 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
       } else if (error.message?.includes('foreign key')) {
         errorMessage = 'Please complete your profile setup first';
       }
-      
-      Toast.show(errorMessage, { 
+
+      Toast.show(errorMessage, {
         duration: Toast.durations.LONG,
         position: Toast.positions.TOP,
       });
-      
+
       Alert.alert(
         'Error Creating Post',
         errorMessage + '\n\nPlease try again or contact support if the problem persists.',
@@ -212,6 +221,14 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
   };
 
   const canSubmit = title.trim().length >= 3 && content.trim().length >= 10 && !submitting;
+
+  const handleBack = () => {
+    if (onClose) {
+      onClose();
+    } else if (onNavigate) {
+      onNavigate('community' as Screen);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -230,7 +247,9 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <ArrowLeft size={24} color="#FFF" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Create Post</Text>
         <TouchableOpacity
           onPress={handleSubmit}
@@ -244,7 +263,7 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
           {submitting ? (
             <ActivityIndicator color="#FFF" size="small" />
           ) : (
-            <Text 
+            <Text
               style={[
                 styles.submitButtonText,
                 !canSubmit && styles.submitButtonTextDisabled,
@@ -276,39 +295,49 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
             showsHorizontalScrollIndicator={false}
             style={styles.categoriesScroll}
           >
-            {CATEGORIES.map((cat) => (
-              <TouchableOpacity
-                key={cat.id}
-                style={[
-                  styles.categoryOption,
-                  category === cat.id && {
-                    backgroundColor: colors.primary,
-                  },
-                  category !== cat.id && {
-                    backgroundColor: isDark ? colors.surface : '#FFFFFF',
-                  },
-                ]}
-                onPress={() => setCategory(cat.id)}
-                activeOpacity={0.7}
-                disabled={submitting}
-              >
-                <Text
+            {POST_CATEGORIES.map((cat) => {
+              const IconComponent = IconMap[cat.icon || 'MessageCircle'];
+              return (
+                <TouchableOpacity
+                  key={cat.id}
                   style={[
-                    styles.categoryOptionText,
-                    {
-                      color:
-                        category === cat.id
-                          ? '#FFF'
-                          : isDark
-                          ? colors.text
-                          : '#000',
+                    styles.categoryOption,
+                    category === cat.id && {
+                      backgroundColor: colors.primary,
+                    },
+                    category !== cat.id && {
+                      backgroundColor: isDark ? colors.surface : '#FFFFFF',
                     },
                   ]}
+                  onPress={() => setCategory(cat.id)}
+                  activeOpacity={0.7}
+                  disabled={submitting}
                 >
-                  {cat.emoji} {cat.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  {IconComponent && (
+                    <IconComponent
+                      size={16}
+                      color={category === cat.id ? '#FFF' : isDark ? colors.text : '#000'}
+                      style={{ marginRight: 6 }}
+                    />
+                  )}
+                  <Text
+                    style={[
+                      styles.categoryOptionText,
+                      {
+                        color:
+                          category === cat.id
+                            ? '#FFF'
+                            : isDark
+                              ? colors.text
+                              : '#000',
+                      },
+                    ]}
+                  >
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
 
@@ -342,8 +371,8 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
           <Text
             style={[
               styles.charCount,
-              { 
-                color: title.length < 3 ? colors.error : colors.textSecondary 
+              {
+                color: title.length < 3 ? colors.error : colors.textSecondary
               },
             ]}
           >
@@ -382,8 +411,8 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
           <Text
             style={[
               styles.charCount,
-              { 
-                color: content.length < 10 ? colors.error : colors.textSecondary 
+              {
+                color: content.length < 10 ? colors.error : colors.textSecondary
               },
             ]}
           >
@@ -414,7 +443,7 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
                   onPress={() => handleRemoveImage(index)}
                   disabled={submitting}
                 >
-                  <Text style={styles.removeImageText}>×</Text>
+                  <X size={16} color="#FFF" />
                 </TouchableOpacity>
               </View>
             ))}
@@ -431,9 +460,7 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
                 activeOpacity={0.7}
                 disabled={submitting}
               >
-                <Text style={[styles.addImageText, { color: colors.primary }]}>
-                  📸
-                </Text>
+                <Camera size={32} color={colors.primary} />
                 <Text style={[styles.addImageLabel, { color: colors.textSecondary }]}>
                   Add Image
                 </Text>
@@ -444,9 +471,12 @@ export const CreatePostScreen = ({ onNavigate, onClose }: CreatePostScreenProps)
 
         {/* Guidelines */}
         <View style={[styles.guidelinesBox, { backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}>
-          <Text style={[styles.guidelinesTitle, { color: isDark ? colors.text : '#000' }]}>
-            📋 Community Guidelines
-          </Text>
+          <View style={styles.guidelinesHeader}>
+            <ClipboardList size={20} color={isDark ? colors.text : '#000'} style={{ marginRight: 8 }} />
+            <Text style={[styles.guidelinesTitle, { color: isDark ? colors.text : '#000' }]}>
+              Community Guidelines
+            </Text>
+          </View>
           <Text style={[styles.guidelinesText, { color: colors.textSecondary }]}>
             • Be respectful and supportive{'\n'}
             • No explicit content or triggers{'\n'}
@@ -473,11 +503,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-  },
-  backButtonText: {
-    color: '#FFF',
-    fontSize: SIZES.body,
-    fontWeight: '600',
   },
   headerTitle: {
     fontSize: SIZES.h3,
@@ -525,6 +550,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SIZES.padding,
   },
   categoryOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
@@ -581,12 +608,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FFF',
   },
-  removeImageText: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: '700',
-    lineHeight: 20,
-  },
   addImageButton: {
     width: 120,
     height: 120,
@@ -596,23 +617,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  addImageText: {
-    fontSize: 32,
-    marginBottom: 4,
-  },
   addImageLabel: {
     fontSize: SIZES.tiny,
     fontWeight: '600',
+    marginTop: 4,
   },
   guidelinesBox: {
     borderRadius: SIZES.radius,
     padding: SIZES.padding,
     marginTop: 8,
   },
+  guidelinesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   guidelinesTitle: {
     fontSize: SIZES.body,
     fontWeight: '700',
-    marginBottom: 8,
   },
   guidelinesText: {
     fontSize: SIZES.small,

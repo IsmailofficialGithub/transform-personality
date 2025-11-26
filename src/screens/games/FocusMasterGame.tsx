@@ -12,6 +12,16 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SIZES } from '../../utils/theme';
 import { useThemeStore } from '../../store/themeStore';
+import {
+  Target,
+  Zap,
+  Flame,
+  Star,
+  Eye,
+  Gamepad2,
+  Brain,
+  Trophy,
+} from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -43,10 +53,10 @@ export const FocusMasterGame = ({ onComplete, onBack }: FocusMasterGameProps) =>
   ]).current;
 
   const colors_buttons = [
-    { gradient: ['#00E676', '#00C853'], sound: '🟢' },
-    { gradient: ['#2196F3', '#1976D2'], sound: '🔵' },
-    { gradient: ['#FF9800', '#F57C00'], sound: '🟠' },
-    { gradient: ['#9C27B0', '#7B1FA2'], sound: '🟣' },
+    { gradient: ['#00E676', '#00C853'], icon: Target },
+    { gradient: ['#2196F3', '#1976D2'], icon: Zap },
+    { gradient: ['#FF9800', '#F57C00'], icon: Flame },
+    { gradient: ['#9C27B0', '#7B1FA2'], icon: Star },
   ];
 
   const startGame = () => {
@@ -69,19 +79,19 @@ export const FocusMasterGame = ({ onComplete, onBack }: FocusMasterGameProps) =>
 
   const showSequence = async (seq: Sequence) => {
     setIsShowingSequence(true);
-    
+
     for (let i = 0; i < seq.length; i++) {
       await new Promise(resolve => setTimeout(resolve, 500));
       flashButton(seq[i]);
       await new Promise(resolve => setTimeout(resolve, 400));
     }
-    
+
     setIsShowingSequence(false);
   };
 
   const flashButton = (index: number) => {
     setActiveButton(index);
-    
+
     Animated.sequence([
       Animated.timing(scaleAnims[index], {
         toValue: 1.1,
@@ -121,7 +131,7 @@ export const FocusMasterGame = ({ onComplete, onBack }: FocusMasterGameProps) =>
       setScore(prev => prev + levelScore);
       setLevel(newLevel);
       setHighestLevel(Math.max(highestLevel, newLevel));
-      
+
       setTimeout(() => {
         generateSequence(newLevel);
       }, 1000);
@@ -130,7 +140,7 @@ export const FocusMasterGame = ({ onComplete, onBack }: FocusMasterGameProps) =>
 
   const gameOver = () => {
     setIsPlaying(false);
-    
+
     setTimeout(() => {
       Alert.alert(
         '🎯 Game Over!',
@@ -158,10 +168,7 @@ export const FocusMasterGame = ({ onComplete, onBack }: FocusMasterGameProps) =>
       <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={[styles.backText, { color: textColor }]}>← Back</Text>
-        </TouchableOpacity>
+      <View style={[styles.header, { justifyContent: 'center' }]}>
         <View style={styles.headerCenter}>
           <Text style={[styles.title, { color: textColor }]}>Focus Master</Text>
           <View style={styles.premiumBadge}>
@@ -175,7 +182,6 @@ export const FocusMasterGame = ({ onComplete, onBack }: FocusMasterGameProps) =>
             </LinearGradient>
           </View>
         </View>
-        <View style={styles.placeholder} />
       </View>
 
       {/* Stats */}
@@ -199,59 +205,69 @@ export const FocusMasterGame = ({ onComplete, onBack }: FocusMasterGameProps) =>
       {/* Status */}
       {isPlaying && (
         <View style={[styles.statusCard, { backgroundColor: cardBg }]}>
-          <Text style={[styles.statusText, { color: textColor }]}>
-            {isShowingSequence 
-              ? '👀 Watch Carefully...' 
-              : `🎮 Your Turn (${userSequence.length}/${sequence.length})`
-            }
-          </Text>
+          <View style={styles.statusRow}>
+            {isShowingSequence ? (
+              <Eye size={24} color={textColor} />
+            ) : (
+              <Gamepad2 size={24} color={textColor} />
+            )}
+            <Text style={[styles.statusText, { color: textColor }]}>
+              {isShowingSequence
+                ? ' Watch Carefully...'
+                : ` Your Turn (${userSequence.length}/${sequence.length})`
+              }
+            </Text>
+          </View>
         </View>
       )}
 
       {/* Game Grid */}
       <View style={styles.gameGrid}>
-        {colors_buttons.map((btn, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.buttonContainer}
-            onPress={() => handleButtonPress(index)}
-            disabled={!isPlaying || isShowingSequence}
-            activeOpacity={0.9}
-          >
-            <Animated.View
-              style={[
-                styles.button,
-                {
-                  transform: [{ scale: scaleAnims[index] }],
-                  opacity: !isPlaying ? 0.5 : activeButton === index ? 1 : 0.7,
-                },
-              ]}
+        {colors_buttons.map((btn, index) => {
+          const Icon = btn.icon;
+          return (
+            <TouchableOpacity
+              key={index}
+              style={styles.buttonContainer}
+              onPress={() => handleButtonPress(index)}
+              disabled={!isPlaying || isShowingSequence}
+              activeOpacity={0.9}
             >
-              <LinearGradient
-                colors={btn.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.buttonGradient}
+              <Animated.View
+                style={[
+                  styles.button,
+                  {
+                    transform: [{ scale: scaleAnims[index] }],
+                    opacity: !isPlaying ? 0.5 : activeButton === index ? 1 : 0.7,
+                  },
+                ]}
               >
-                <Text style={styles.buttonEmoji}>{btn.sound}</Text>
-              </LinearGradient>
-            </Animated.View>
-          </TouchableOpacity>
-        ))}
+                <LinearGradient
+                  colors={btn.gradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.buttonGradient}
+                >
+                  <Icon size={48} color="#FFF" />
+                </LinearGradient>
+              </Animated.View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Start Button */}
       {!isPlaying && (
         <View style={styles.startContainer}>
           <View style={[styles.startCard, { backgroundColor: cardBg }]}>
-            <Text style={styles.startEmoji}>🎯</Text>
+            <Target size={64} color="#667EEA" style={styles.startIcon} />
             <Text style={[styles.startTitle, { color: textColor }]}>
               Focus Master Challenge
             </Text>
             <Text style={[styles.startDescription, { color: subText }]}>
               Watch the sequence and repeat it. Each level adds more steps!
             </Text>
-            
+
             <TouchableOpacity
               style={styles.startButton}
               onPress={startGame}
@@ -279,9 +295,12 @@ export const FocusMasterGame = ({ onComplete, onBack }: FocusMasterGameProps) =>
       {/* Info */}
       {!isPlaying && (
         <View style={[styles.infoCard, { backgroundColor: cardBg }]}>
-          <Text style={[styles.infoTitle, { color: textColor }]}>
-            🧠 Benefits
-          </Text>
+          <View style={styles.infoHeader}>
+            <Brain size={20} color={textColor} />
+            <Text style={[styles.infoTitle, { color: textColor }]}>
+              Benefits
+            </Text>
+          </View>
           <View style={styles.infoItem}>
             <Text style={styles.infoBullet}>•</Text>
             <Text style={[styles.infoText, { color: subText }]}>
@@ -313,17 +332,10 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: SIZES.padding,
     marginBottom: 16,
-  },
-  backButton: {
-    padding: 8,
-  },
-  backText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
   headerCenter: {
     flexDirection: 'row',
@@ -347,9 +359,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFF',
   },
-  placeholder: {
-    width: 60,
-  },
   statsRow: {
     flexDirection: 'row',
     paddingHorizontal: SIZES.padding,
@@ -372,107 +381,113 @@ const styles = StyleSheet.create({
   },
   statusCard: {
     marginHorizontal: SIZES.padding,
-borderRadius: 12,
-padding: 16,
-marginBottom: 20,
-alignItems: 'center',
-},
-statusText: {
-fontSize: 16,
-fontWeight: '700',
-},
-gameGrid: {
-flexDirection: 'row',
-flexWrap: 'wrap',
-paddingHorizontal: SIZES.padding,
-gap: 12,
-marginBottom: 20,
-},
-buttonContainer: {
-width: (width - SIZES.padding * 2 - 12) / 2,
-height: (width - SIZES.padding * 2 - 12) / 2,
-},
-button: {
-flex: 1,
-borderRadius: 16,
-overflow: 'hidden',
-},
-buttonGradient: {
-flex: 1,
-justifyContent: 'center',
-alignItems: 'center',
-},
-buttonEmoji: {
-fontSize: 64,
-},
-startContainer: {
-paddingHorizontal: SIZES.padding,
-marginBottom: 20,
-},
-startCard: {
-borderRadius: 16,
-padding: 24,
-alignItems: 'center',
-},
-startEmoji: {
-fontSize: 64,
-marginBottom: 16,
-},
-startTitle: {
-fontSize: 22,
-fontWeight: '700',
-marginBottom: 12,
-},
-startDescription: {
-fontSize: 14,
-textAlign: 'center',
-lineHeight: 20,
-marginBottom: 24,
-},
-startButton: {
-borderRadius: 12,
-overflow: 'hidden',
-width: '100%',
-marginBottom: 12,
-},
-startButtonGradient: {
-padding: 16,
-alignItems: 'center',
-},
-startButtonText: {
-fontSize: 16,
-fontWeight: '700',
-color: '#FFF',
-},
-highScore: {
-fontSize: 13,
-fontWeight: '600',
-},
-infoCard: {
-marginHorizontal: SIZES.padding,
-padding: 16,
-borderRadius: 12,
-marginBottom: 20,
-},
-infoTitle: {
-fontSize: 14,
-fontWeight: '700',
-marginBottom: 12,
-},
-infoItem: {
-flexDirection: 'row',
-alignItems: 'flex-start',
-marginBottom: 8,
-},
-infoBullet: {
-fontSize: 16,
-color: '#6C5CE7',
-marginRight: 8,
-marginTop: -2,
-},
-infoText: {
-flex: 1,
-fontSize: 13,
-lineHeight: 18,
-},
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statusText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  gameGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: SIZES.padding,
+    gap: 12,
+    marginBottom: 20,
+  },
+  buttonContainer: {
+    width: (width - SIZES.padding * 2 - 12) / 2,
+    height: (width - SIZES.padding * 2 - 12) / 2,
+  },
+  button: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  buttonGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  startContainer: {
+    paddingHorizontal: SIZES.padding,
+    marginBottom: 20,
+  },
+  startCard: {
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+  },
+  startIcon: {
+    marginBottom: 16,
+  },
+  startTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  startDescription: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  startButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    width: '100%',
+    marginBottom: 12,
+  },
+  startButtonGradient: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  startButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  highScore: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  infoCard: {
+    marginHorizontal: SIZES.padding,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  infoTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  infoBullet: {
+    fontSize: 16,
+    color: '#6C5CE7',
+    marginRight: 8,
+    marginTop: -2,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
 });

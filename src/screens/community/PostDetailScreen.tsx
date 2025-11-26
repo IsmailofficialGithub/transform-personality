@@ -16,6 +16,14 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { formatDistanceToNow } from 'date-fns';
 import Toast from 'react-native-root-toast';
+import {
+  Heart,
+  MessageCircle,
+  Eye,
+  Trash2,
+  ArrowLeft,
+  Send
+} from 'lucide-react-native';
 import { communityService } from '../../services/CommunityService';
 import { useCommunityStore } from '../../store/communityStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -40,15 +48,17 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
   const [commenting, setCommenting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [liking, setLiking] = useState(false);
-  
+
   const isAuthor = post && currentProfile && post.author_id === currentProfile.id;
 
   useEffect(() => {
     const initializePost = async () => {
+      if (!postId) return;
+
       try {
         // Increment views
         await communityService.incrementPostViews(postId);
-  
+
         // Load post data
         await loadPost();
         await loadComments();
@@ -56,10 +66,10 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
         console.error('Error initializing post:', error);
       }
     };
-  
+
     initializePost();
   }, [postId]);
-  
+
 
   const loadPost = async () => {
     try {
@@ -84,7 +94,7 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
 
   const handleLike = async () => {
     if (!post || liking) return; // Prevent double-clicks
-    
+
     try {
       setLiking(true);
       const wasLiked = post.is_liked;
@@ -151,7 +161,7 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
 
   const handleDeletePost = async () => {
     if (!post) return;
-    
+
     Alert.alert(
       'Delete Post',
       'Are you sure you want to delete this post? This action cannot be undone.',
@@ -214,7 +224,9 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+          <ArrowLeft size={24} color="#FFF" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Post</Text>
         {isAuthor && (
           <TouchableOpacity
@@ -225,7 +237,7 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
             {deleting ? (
               <ActivityIndicator color="#FFF" size="small" />
             ) : (
-              <Text style={styles.deleteButtonText}>🗑️</Text>
+              <Trash2 size={20} color="#FFF" />
             )}
           </TouchableOpacity>
         )}
@@ -269,27 +281,29 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
 
           {/* Actions */}
           <View style={styles.postActions}>
-            <TouchableOpacity 
-              style={styles.actionButton} 
-              onPress={handleLike} 
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleLike}
               activeOpacity={0.7}
               disabled={liking}
             >
-              <Text style={[styles.actionIcon, { color: post.is_liked ? colors.error : colors.textSecondary }]}>
-                {post.is_liked ? '❤️' : '🤍'}
-              </Text>
+              <Heart
+                size={22}
+                color={post.is_liked ? colors.error : colors.textSecondary}
+                fill={post.is_liked ? colors.error : 'none'}
+              />
               <Text style={[styles.actionCount, { color: isDark ? colors.textSecondary : '#666' }]}>
                 {post.likes_count}
               </Text>
             </TouchableOpacity>
             <View style={styles.actionButton}>
-              <Text style={[styles.actionIcon, { color: colors.textSecondary }]}>💬</Text>
+              <MessageCircle size={22} color={colors.textSecondary} />
               <Text style={[styles.actionCount, { color: isDark ? colors.textSecondary : '#666' }]}>
                 {post.comments_count}
               </Text>
             </View>
             <View style={styles.actionButton}>
-              <Text style={[styles.actionIcon, { color: colors.textSecondary }]}>👁️</Text>
+              <Eye size={22} color={colors.textSecondary} />
               <Text style={[styles.actionCount, { color: isDark ? colors.textSecondary : '#666' }]}>
                 {post.views_count}
               </Text>
@@ -335,9 +349,11 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
                   onPress={() => handleCommentLike(comment.id)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.commentLikeIcon, { color: comment.is_liked ? colors.error : colors.textSecondary }]}>
-                    {comment.is_liked ? '❤️' : '🤍'}
-                  </Text>
+                  <Heart
+                    size={18}
+                    color={comment.is_liked ? colors.error : colors.textSecondary}
+                    fill={comment.is_liked ? colors.error : 'none'}
+                  />
                   <Text style={[styles.commentLikeCount, { color: isDark ? colors.textSecondary : '#666' }]}>
                     {comment.likes_count}
                   </Text>
@@ -373,7 +389,7 @@ export const PostDetailScreen = ({ postId, onNavigate, onBack }: PostDetailScree
           {commenting ? (
             <ActivityIndicator color="#FFF" size="small" />
           ) : (
-            <Text style={styles.commentSubmitText}>Post</Text>
+            <Send size={20} color="#FFF" />
           )}
         </TouchableOpacity>
       </View>
@@ -406,27 +422,19 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
   },
-  backButtonText: {
-    color: '#FFF',
-    fontSize: SIZES.body,
-    fontWeight: '600',
-  },
   headerTitle: {
     fontSize: SIZES.h3,
     fontWeight: '700',
     color: '#FFF',
   },
   headerSpacer: {
-    width: 60,
+    width: 40,
   },
   deleteButton: {
     padding: 8,
     minWidth: 40,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  deleteButtonText: {
-    fontSize: 20,
   },
   content: {
     flex: 1,
@@ -512,13 +520,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 20,
   },
-  actionIcon: {
-    fontSize: 22,
-    marginRight: 6,
-  },
   actionCount: {
     fontSize: SIZES.small,
     fontWeight: '600',
+    marginLeft: 6,
   },
   commentsSection: {
     marginTop: SIZES.margin,
@@ -579,13 +584,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
   },
-  commentLikeIcon: {
-    fontSize: 18,
-    marginRight: 4,
-  },
   commentLikeCount: {
     fontSize: SIZES.tiny,
     fontWeight: '600',
+    marginLeft: 4,
   },
   noComments: {
     paddingVertical: 40,
@@ -616,10 +618,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minWidth: 60,
   },
-  commentSubmitText: {
-    color: '#FFF',
-    fontSize: SIZES.body,
-    fontWeight: '700',
-  },
 });
-

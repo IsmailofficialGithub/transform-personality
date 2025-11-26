@@ -19,25 +19,25 @@ export const GamePlayScreen = ({ gameId, onBack, onComplete }: GamePlayScreenPro
   switch (gameId) {
     case 'pattern-master':
       return <PatternMasterGame onComplete={onComplete} onBack={onBack} />;
-    
+
     case 'memory-match':
       return <MemoryMatchGame onComplete={onComplete} onBack={onBack} />;
-    
+
     case 'breath-pacer':
       return <BreathPacerGame onComplete={onComplete} onBack={onBack} />;
-    
+
     case 'reaction-time':
       return <ReactionTimeGame onComplete={onComplete} onBack={onBack} />;
-    
+
     case 'urge-fighter':
       return <UrgeFighterGame onComplete={onComplete} onBack={onBack} />;
-    
+
     case 'focus-master':
       return <FocusMasterGame onComplete={onComplete} onBack={onBack} />;
-    
+
     case 'zen-garden':
       return <ZenGardenGame onComplete={onComplete} onBack={onBack} />;
-    
+
     default:
       return (
         <View style={styles.errorContainer}>

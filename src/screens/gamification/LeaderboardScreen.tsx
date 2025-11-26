@@ -10,6 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../../store/themeStore';
 import { SIZES } from '../../utils/theme';
+import { Flame, Star, Medal } from 'lucide-react-native';
 
 interface LeaderboardEntry {
   id: string;
@@ -37,15 +38,6 @@ export const LeaderboardScreen = () => {
   const subText = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
   const cardBg = isDark ? 'rgba(25,25,25,0.9)' : 'rgba(255,255,255,0.95)';
 
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1: return '🥇';
-      case 2: return '🥈';
-      case 3: return '🥉';
-      default: return `#${rank}`;
-    }
-  };
-
   const getRankColor = (rank: number) => {
     switch (rank) {
       case 1: return ['#FFD700', '#FFA500'];
@@ -55,10 +47,19 @@ export const LeaderboardScreen = () => {
     }
   };
 
+  const renderRankIcon = (rank: number) => {
+    switch (rank) {
+      case 1: return <Medal size={40} color="#FFF" />;
+      case 2: return <Medal size={40} color="#FFF" />;
+      case 3: return <Medal size={40} color="#FFF" />;
+      default: return <Text style={styles.rankText}>#{rank}</Text>;
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#000' : '#F9F9F9' }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -81,12 +82,15 @@ export const LeaderboardScreen = () => {
             onPress={() => setActiveTab('streak')}
             activeOpacity={0.7}
           >
-            <Text style={[
-              styles.tabText,
-              { color: activeTab === 'streak' ? '#FFF' : textColor }
-            ]}>
-              🔥 Streak
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+              <Flame size={16} color={activeTab === 'streak' ? '#FFF' : textColor} style={{ marginRight: 6 }} />
+              <Text style={[
+                styles.tabText,
+                { color: activeTab === 'streak' ? '#FFF' : textColor }
+              ]}>
+                Streak
+              </Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
@@ -97,12 +101,15 @@ export const LeaderboardScreen = () => {
             onPress={() => setActiveTab('xp')}
             activeOpacity={0.7}
           >
-            <Text style={[
-              styles.tabText,
-              { color: activeTab === 'xp' ? '#FFF' : textColor }
-            ]}>
-              ⭐ XP
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+              <Star size={16} color={activeTab === 'xp' ? '#FFF' : textColor} style={{ marginRight: 6 }} />
+              <Text style={[
+                styles.tabText,
+                { color: activeTab === 'xp' ? '#FFF' : textColor }
+              ]}>
+                XP
+              </Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -111,7 +118,7 @@ export const LeaderboardScreen = () => {
           {LEADERBOARD_DATA.slice(0, 3).map((entry, index) => {
             const positions = [1, 0, 2]; // Center, Left, Right
             const position = positions[index];
-            
+
             return (
               <View
                 key={entry.id}
@@ -128,7 +135,7 @@ export const LeaderboardScreen = () => {
                   end={{ x: 1, y: 1 }}
                   style={styles.podiumBadge}
                 >
-                  <Text style={styles.rankIcon}>{getRankIcon(entry.rank)}</Text>
+                  {renderRankIcon(entry.rank)}
                 </LinearGradient>
                 <Text style={[styles.podiumName, { color: textColor }]} numberOfLines={1}>
                   {entry.name}
@@ -163,8 +170,8 @@ export const LeaderboardScreen = () => {
                   {entry.isCurrentUser && ' (You)'}
                 </Text>
                 <Text style={[styles.userStats, { color: subText }]}>
-                  {activeTab === 'streak' 
-                    ? `${entry.streak} day streak` 
+                  {activeTab === 'streak'
+                    ? `${entry.streak} day streak`
                     : `${entry.xp} XP`}
                 </Text>
               </View>
@@ -253,8 +260,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  rankIcon: {
-    fontSize: 40,
+  rankText: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#FFF',
   },
   podiumName: {
     fontSize: 14,
@@ -308,4 +317,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-

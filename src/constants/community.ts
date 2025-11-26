@@ -14,11 +14,11 @@ export type {
 
 // Category configuration
 export const POST_CATEGORIES = [
-  { id: 'success', label: 'Success', emoji: '🎉', color: '#4CAF50' },
-  { id: 'support', label: 'Support', emoji: '💪', color: '#2196F3' },
-  { id: 'question', label: 'Question', emoji: '❓', color: '#FF9800' },
-  { id: 'motivation', label: 'Motivation', emoji: '🔥', color: '#F44336' },
-  { id: 'general', label: 'General', emoji: '💬', color: '#9C27B0' },
+  { id: 'success', label: 'Success', emoji: '🎉', icon: 'PartyPopper', color: '#4CAF50' },
+  { id: 'support', label: 'Support', emoji: '💪', icon: 'HeartHandshake', color: '#2196F3' },
+  { id: 'question', label: 'Question', emoji: '❓', icon: 'HelpCircle', color: '#FF9800' },
+  { id: 'motivation', label: 'Motivation', emoji: '🔥', icon: 'Flame', color: '#F44336' },
+  { id: 'general', label: 'General', emoji: '💬', icon: 'MessageCircle', color: '#9C27B0' },
 ] as const;
 
 // Report reasons
@@ -36,39 +36,44 @@ export const COMMUNITY_GUIDELINES = [
     title: 'Be Respectful',
     description: 'Treat all members with kindness and respect. We\'re all on a journey together.',
     emoji: '🤝',
+    icon: 'Handshake',
   },
   {
     title: 'Stay Anonymous',
     description: 'Protect your privacy and that of others. Don\'t share personal identifying information.',
     emoji: '🔒',
+    icon: 'Lock',
   },
   {
     title: 'Be Supportive',
     description: 'Offer encouragement and constructive feedback. Avoid judgment.',
     emoji: '💝',
+    icon: 'Heart',
   },
   {
     title: 'No Triggers',
     description: 'Avoid sharing explicit content or triggers that might harm others\' recovery.',
     emoji: '⚠️',
+    icon: 'AlertTriangle',
   },
   {
     title: 'Stay Safe',
     description: 'Report any concerning content. If you\'re in crisis, seek professional help immediately.',
     emoji: '🆘',
+    icon: 'ShieldAlert',
   },
 ];
 
 // Badge system
 export const COMMUNITY_BADGES = [
-  { id: 'first_post', name: 'First Post', emoji: '📝', description: 'Created your first post' },
-  { id: 'helpful', name: 'Helpful', emoji: '🌟', description: 'Received 50+ likes on comments' },
-  { id: 'supporter', name: 'Supporter', emoji: '💪', description: 'Commented on 20+ posts' },
-  { id: 'storyteller', name: 'Storyteller', emoji: '📖', description: 'Shared your success story' },
-  { id: 'mentor', name: 'Mentor', emoji: '🎓', description: 'Helped 10+ members' },
-  { id: 'streak_30', name: '30 Day Warrior', emoji: '🔥', description: '30 days clean' },
-  { id: 'streak_90', name: '90 Day Champion', emoji: '🏆', description: '90 days clean' },
-  { id: 'streak_365', name: 'Year Legend', emoji: '👑', description: '365 days clean' },
+  { id: 'first_post', name: 'First Post', emoji: '📝', icon: 'PenTool', description: 'Created your first post' },
+  { id: 'helpful', name: 'Helpful', emoji: '🌟', icon: 'Star', description: 'Received 50+ likes on comments' },
+  { id: 'supporter', name: 'Supporter', emoji: '💪', icon: 'ThumbsUp', description: 'Commented on 20+ posts' },
+  { id: 'storyteller', name: 'Storyteller', emoji: '📖', icon: 'BookOpen', description: 'Shared your success story' },
+  { id: 'mentor', name: 'Mentor', emoji: '🎓', icon: 'GraduationCap', description: 'Helped 10+ members' },
+  { id: 'streak_30', name: '30 Day Warrior', emoji: '🔥', icon: 'Flame', description: '30 days clean' },
+  { id: 'streak_90', name: '90 Day Champion', emoji: '🏆', icon: 'Trophy', description: '90 days clean' },
+  { id: 'streak_365', name: 'Year Legend', emoji: '👑', icon: 'Crown', description: '365 days clean' },
 ];
 
 // Level system configuration
@@ -191,7 +196,7 @@ export const containsTriggers = (text: string): boolean => {
     // Add appropriate trigger words based on your app's context
     // Keep this list private and secure
   ];
-  
+
   const lowerText = text.toLowerCase();
   return triggers.some(trigger => lowerText.includes(trigger.toLowerCase()));
 };
@@ -227,14 +232,14 @@ export const getNextMilestone = (currentDays: number): number | null => {
 
 // Get milestone info
 export const getMilestoneInfo = (days: number) => {
-  if (days >= 1095) return { emoji: '👑', color: '#FFD700', title: '3 Year Legend' };
-  if (days >= 730) return { emoji: '💎', color: '#E91E63', title: '2 Year Champion' };
-  if (days >= 365) return { emoji: '🏆', color: '#9C27B0', title: '1 Year Warrior' };
-  if (days >= 180) return { emoji: '⭐', color: '#FF9800', title: '6 Month Hero' };
-  if (days >= 90) return { emoji: '🔥', color: '#F44336', title: '90 Day Victor' };
-  if (days >= 60) return { emoji: '💪', color: '#2196F3', title: '60 Day Fighter' };
-  if (days >= 30) return { emoji: '🌟', color: '#4CAF50', title: '30 Day Achiever' };
-  if (days >= 14) return { emoji: '✨', color: '#00BCD4', title: '2 Week Starter' };
-  if (days >= 7) return { emoji: '🎯', color: '#607D8B', title: '1 Week Beginner' };
-  return { emoji: '🌱', color: '#8BC34A', title: 'Fresh Start' };
+  if (days >= 1095) return { emoji: '👑', icon: 'Crown', color: '#FFD700', title: '3 Year Legend' };
+  if (days >= 730) return { emoji: '💎', icon: 'Gem', color: '#E91E63', title: '2 Year Champion' };
+  if (days >= 365) return { emoji: '🏆', icon: 'Trophy', color: '#9C27B0', title: '1 Year Warrior' };
+  if (days >= 180) return { emoji: '⭐', icon: 'Award', color: '#FF9800', title: '6 Month Hero' };
+  if (days >= 90) return { emoji: '🔥', icon: 'Flame', color: '#F44336', title: '90 Day Victor' };
+  if (days >= 60) return { emoji: '💪', icon: 'Dumbbell', color: '#2196F3', title: '60 Day Fighter' };
+  if (days >= 30) return { emoji: '🌟', icon: 'Star', color: '#4CAF50', title: '30 Day Achiever' };
+  if (days >= 14) return { emoji: '✨', icon: 'Sparkles', color: '#00BCD4', title: '2 Week Starter' };
+  if (days >= 7) return { emoji: '🎯', icon: 'Target', color: '#607D8B', title: '1 Week Beginner' };
+  return { emoji: '🌱', icon: 'Sprout', color: '#8BC34A', title: 'Fresh Start' };
 };

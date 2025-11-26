@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   Dimensions,
   Alert,
 } from 'react-native';
@@ -12,6 +11,15 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SIZES } from '../../utils/theme';
 import { useThemeStore } from '../../store/themeStore';
+import {
+  AlertCircle,
+  AlertTriangle,
+  AlertOctagon,
+  Heart,
+  Shield,
+  Swords,
+  Gamepad2,
+} from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -105,7 +113,7 @@ export const UrgeFighterGame = ({ onComplete, onBack }: UrgeFighterGameProps) =>
 
   const hitUrge = (urgeId: number, intensity: number) => {
     setUrges(prev => prev.filter(u => u.id !== urgeId));
-    
+
     const points = intensity * 10 * (combo + 1);
     setScore(s => s + points);
     setCombo(c => c + 1);
@@ -131,10 +139,10 @@ export const UrgeFighterGame = ({ onComplete, onBack }: UrgeFighterGameProps) =>
 
   const endGame = () => {
     setIsPlaying(false);
-    
+
     setTimeout(() => {
       Alert.alert(
-        health <= 0 ? '💔 Defeated!' : '🏆 Victory!',
+        health <= 0 ? 'Defeated!' : 'Victory!',
         `Wave: ${wave}\nUrges Defeated: ${defeatedUrges}\nFinal Score: ${score}`,
         [
           {
@@ -159,12 +167,12 @@ export const UrgeFighterGame = ({ onComplete, onBack }: UrgeFighterGameProps) =>
     }
   };
 
-  const getUrgeEmoji = (intensity: number): string => {
+  const getUrgeIcon = (intensity: number) => {
     switch (intensity) {
-      case 1: return '😐';
-      case 2: return '😟';
-      case 3: return '😰';
-      default: return '😐';
+      case 1: return AlertCircle;
+      case 2: return AlertTriangle;
+      case 3: return AlertOctagon;
+      default: return AlertCircle;
     }
   };
 
@@ -185,9 +193,9 @@ export const UrgeFighterGame = ({ onComplete, onBack }: UrgeFighterGameProps) =>
           <Text style={[styles.title, { color: textColor }]}>Urge Fighter</Text>
           <View style={styles.premiumBadge}>
             <LinearGradient
-              colors={['#FFD700', '#FFA500']}
+              colors={['#FF9800', '#F57C00']}
               start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+              end={{ x: 1, y: 0 }}
               style={styles.premiumGradient}
             >
               <Text style={styles.premiumText}>PRO</Text>
@@ -225,57 +233,64 @@ export const UrgeFighterGame = ({ onComplete, onBack }: UrgeFighterGameProps) =>
             style={[styles.healthBarFill, { width: `${health}%` }]}
           />
         </View>
-        <Text style={[styles.healthText, { color: textColor }]}>
-          ❤️ {health}%
-        </Text>
+        <View style={styles.healthTextContainer}>
+          <Heart size={12} color={textColor} fill={textColor} />
+          <Text style={[styles.healthText, { color: textColor }]}>
+            {health}%
+          </Text>
+        </View>
       </View>
 
       {/* Game Area */}
       <View style={styles.gameArea}>
         {isPlaying ? (
           <>
-            {urges.map(urge => (
-              <TouchableOpacity
-                key={urge.id}
-                style={[
-                  styles.urge,
-                  {
-                    left: urge.x,
-                    top: urge.y,
-                  },
-                ]}
-                onPress={() => hitUrge(urge.id, urge.intensity)}
-                activeOpacity={0.7}
-              >
-                <LinearGradient
-                  colors={getUrgeColor(urge.intensity)}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.urgeGradient}
+            {urges.map(urge => {
+              const Icon = getUrgeIcon(urge.intensity);
+              return (
+                <TouchableOpacity
+                  key={urge.id}
+                  style={[
+                    styles.urge,
+                    {
+                      left: urge.x,
+                      top: urge.y,
+                    },
+                  ]}
+                  onPress={() => hitUrge(urge.id, urge.intensity)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.urgeEmoji}>{getUrgeEmoji(urge.intensity)}</Text>
-                  <Text style={styles.urgeIntensity}>{urge.intensity}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))}
+                  <LinearGradient
+                    colors={getUrgeColor(urge.intensity)}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.urgeGradient}
+                  >
+                    <Icon size={24} color="#FFF" />
+                    <Text style={styles.urgeIntensity}>{urge.intensity}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              );
+            })}
 
             <View style={styles.defenseZone}>
+              <Shield size={20} color={subText} style={{ marginRight: 8 }} />
               <Text style={[styles.defenseText, { color: subText }]}>
-                🛡️ DEFENSE ZONE
+                DEFENSE ZONE
               </Text>
             </View>
           </>
         ) : (
           <View style={styles.startContainer}>
             <View style={[styles.startCard, { backgroundColor: cardBg }]}>
-              <Text style={styles.startEmoji}>⚔️</Text>
+              <Swords size={64} color="#FF5252" style={styles.startIcon} />
               <Text style={[styles.startTitle, { color: textColor }]}>
                 Ready to Fight?
               </Text>
               <Text style={[styles.startDescription, { color: subText }]}>
                 Tap the urges before they reach the bottom. Higher intensity urges give more points!
               </Text>
-              
+
               <TouchableOpacity
                 style={styles.startButton}
                 onPress={startGame}
@@ -298,9 +313,12 @@ export const UrgeFighterGame = ({ onComplete, onBack }: UrgeFighterGameProps) =>
       {/* Info */}
       {!isPlaying && (
         <View style={[styles.infoCard, { backgroundColor: cardBg }]}>
-          <Text style={[styles.infoTitle, { color: textColor }]}>
-            🎮 How to Play
-          </Text>
+          <View style={styles.infoHeader}>
+            <Gamepad2 size={20} color={textColor} />
+            <Text style={[styles.infoTitle, { color: textColor }]}>
+              How to Play
+            </Text>
+          </View>
           <View style={styles.infoItem}>
             <Text style={styles.infoBullet}>•</Text>
             <Text style={[styles.infoText, { color: subText }]}>
@@ -405,10 +423,15 @@ const styles = StyleSheet.create({
   healthBarFill: {
     height: '100%',
   },
+  healthTextContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+  },
   healthText: {
     fontSize: 12,
     fontWeight: '700',
-    textAlign: 'center',
   },
   gameArea: {
     flex: 1,
@@ -425,9 +448,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  urgeEmoji: {
-    fontSize: 24,
   },
   urgeIntensity: {
     fontSize: 10,
@@ -447,6 +467,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 82, 82, 0.1)',
+    flexDirection: 'row',
   },
   defenseText: {
     fontSize: 14,
@@ -462,8 +483,7 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
   },
-  startEmoji: {
-    fontSize: 64,
+  startIcon: {
     marginBottom: 16,
   },
   startTitle: {
@@ -497,10 +517,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 20,
   },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
   infoTitle: {
     fontSize: 14,
     fontWeight: '700',
-    marginBottom: 12,
   },
   infoItem: {
     flexDirection: 'row',

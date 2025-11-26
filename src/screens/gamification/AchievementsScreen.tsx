@@ -4,19 +4,41 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ImageBackground,
   Animated,
   Easing,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SIZES } from '../../utils/theme';
 import { useHabitStore } from '../../store/habitStore';
 import { useThemeStore } from '../../store/themeStore';
 import { ACHIEVEMENT_MILESTONES } from '../../utils/constants';
+import {
+  Footprints,
+  Zap,
+  Calendar,
+  Medal,
+  Brain,
+  Star,
+  Lightbulb,
+  Flame,
+  Shield,
+  Crown,
+  Target,
+  Gamepad2,
+  Lock,
+} from 'lucide-react-native';
 
-const ACHIEVEMENT_IMAGES = {
-  locked: 'https://images.unsplash.com/photo-1614851099175-e5b30eb6f696?w=400',
-  unlocked: 'https://images.unsplash.com/photo-1533551100771-5ce1ab5e9063?w=400',
+const IconMap: Record<string, any> = {
+  Footprints,
+  Zap,
+  Calendar,
+  Medal,
+  Brain,
+  Star,
+  Lightbulb,
+  Flame,
+  Shield,
+  Crown,
+  Target,
 };
 
 interface Achievement {
@@ -69,7 +91,7 @@ export const AchievementsScreen = () => {
         id: 'multi-habit',
         title: 'Multi-Tasker',
         description: 'Track 3 or more habits',
-        icon: '🎯',
+        icon: 'Target',
         unlocked: habits.length >= 3,
         unlockedAt: habits.length >= 3 ? new Date().toISOString() : undefined,
         requirement: 3,
@@ -137,7 +159,7 @@ export const AchievementsScreen = () => {
         <Text style={[styles.sectionTitle, { color: textColor }]}>Unlocked</Text>
         {achievements.filter((a) => a.unlocked).length === 0 ? (
           <View style={[styles.emptyState, { backgroundColor: cardBg }]}>
-            <Text style={styles.emptyIcon}>🕹️</Text>
+            <Gamepad2 size={60} color={subText} style={{ marginBottom: 10 }} />
             <Text style={[styles.emptyText, { color: textColor }]}>No achievements yet</Text>
             <Text style={[styles.emptySubtext, { color: subText }]}>
               Keep going! Unlock your first badge soon.
@@ -146,22 +168,25 @@ export const AchievementsScreen = () => {
         ) : (
           achievements
             .filter((a) => a.unlocked)
-            .map((a, i) => (
-              <View key={i} style={[styles.achievementCard, { backgroundColor: cardBg }]}>
-                <View style={styles.iconBox}>
-                  <Text style={styles.icon}>{a.icon}</Text>
+            .map((a, i) => {
+              const Icon = IconMap[a.icon] || Star;
+              return (
+                <View key={i} style={[styles.achievementCard, { backgroundColor: cardBg }]}>
+                  <View style={styles.iconBox}>
+                    <Icon size={26} color="#FFD700" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.title, { color: textColor }]}>{a.title}</Text>
+                    <Text style={[styles.description, { color: subText }]}>{a.description}</Text>
+                    {a.unlockedAt && (
+                      <Text style={[styles.date, { color: subText }]}>
+                        Unlocked {new Date(a.unlockedAt).toLocaleDateString()}
+                      </Text>
+                    )}
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.title, { color: textColor }]}>{a.title}</Text>
-                  <Text style={[styles.description, { color: subText }]}>{a.description}</Text>
-                  {a.unlockedAt && (
-                    <Text style={[styles.date, { color: subText }]}>
-                      Unlocked {new Date(a.unlockedAt).toLocaleDateString()}
-                    </Text>
-                  )}
-                </View>
-              </View>
-            ))
+              );
+            })
         )}
 
         {/* Locked */}
@@ -171,7 +196,7 @@ export const AchievementsScreen = () => {
           .map((a, i) => (
             <View key={i} style={[styles.achievementCard, { backgroundColor: cardBg }]}>
               <View style={[styles.iconBox, { backgroundColor: isDark ? '#222' : '#EEE' }]}>
-                <Text style={[styles.icon, { opacity: 0.4 }]}>🔒</Text>
+                <Lock size={26} color={subText} style={{ opacity: 0.4 }} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.title, { color: textColor }]}>{a.title}</Text>
@@ -232,7 +257,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 14,
   },
-  icon: { fontSize: 26 },
   title: { fontSize: 16, fontWeight: '600' },
   description: { fontSize: 13, marginTop: 2 },
   date: { fontSize: 11, marginTop: 4 },
@@ -242,7 +266,6 @@ const styles = StyleSheet.create({
     paddingVertical: 50,
     marginBottom: 30,
   },
-  emptyIcon: { fontSize: 60, marginBottom: 10 },
   emptyText: { fontSize: 18, fontWeight: '600' },
   emptySubtext: { fontSize: 13, textAlign: 'center', maxWidth: 200 },
   progressMini: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },

@@ -94,14 +94,14 @@ export type HabitType = typeof HABIT_CATEGORIES[number];
 // 🏆 ACHIEVEMENTS / MILESTONES
 // -----------------------------
 export const ACHIEVEMENT_MILESTONES = [
-  { days: 1, title: 'First Step', icon: '🚶‍♂️' },
-  { days: 3, title: 'Momentum Building', icon: '⚡' },
-  { days: 7, title: 'One Week Strong', icon: '📅' },
-  { days: 14, title: 'Two Weeks Clean', icon: '🏅' },
-  { days: 21, title: 'Three Weeks Focused', icon: '🧘‍♂️' },
-  { days: 30, title: 'One Month Milestone', icon: '🌟' },
-  { days: 60, title: 'Two Months Clarity', icon: '💡' },
-  { days: 90, title: 'Three Months Power', icon: '🔥' },
-  { days: 180, title: 'Half-Year Warrior', icon: '🛡️' },
-  { days: 365, title: 'One-Year Champion', icon: '👑' },
+  { days: 1, title: 'First Step', icon: 'Footprints' },
+  { days: 3, title: 'Momentum Building', icon: 'Zap' },
+  { days: 7, title: 'One Week Strong', icon: 'Calendar' },
+  { days: 14, title: 'Two Weeks Clean', icon: 'Medal' },
+  { days: 21, title: 'Three Weeks Focused', icon: 'Brain' },
+  { days: 30, title: 'One Month Milestone', icon: 'Star' },
+  { days: 60, title: 'Two Months Clarity', icon: 'Lightbulb' },
+  { days: 90, title: 'Three Months Power', icon: 'Flame' },
+  { days: 180, title: 'Half-Year Warrior', icon: 'Shield' },
+  { days: 365, title: 'One-Year Champion', icon: 'Crown' },
 ];

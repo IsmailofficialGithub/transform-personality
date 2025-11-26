@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,14 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import { SIZES } from '../../utils/theme';
 import { useThemeStore } from '../../store/themeStore';
+import {
+  Trash2,
+  Flower2,
+  Lightbulb,
+} from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -42,7 +47,7 @@ export const ZenGardenGame = ({ onComplete, onBack }: ZenGardenGameProps) => {
   const startTimeRef = useRef(Date.now());
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     timerRef.current = setInterval(() => {
       setTimeSpent(Math.floor((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
@@ -108,9 +113,9 @@ export const ZenGardenGame = ({ onComplete, onBack }: ZenGardenGameProps) => {
 
   const saveAndComplete = () => {
     const score = strokesCount * 10 + Math.floor(timeSpent / 10) * 5;
-    
+
     Alert.alert(
-      '🌸 Zen Session Complete',
+      'Zen Session Complete',
       `Time Spent: ${Math.floor(timeSpent / 60)}m ${timeSpent % 60}s\nStrokes: ${strokesCount}\n\nScore: ${score}`,
       [
         {
@@ -132,7 +137,7 @@ export const ZenGardenGame = ({ onComplete, onBack }: ZenGardenGameProps) => {
   const textColor = isDark ? '#FFF' : '#000';
   const subText = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
   const cardBg = isDark ? 'rgba(25,25,25,0.9)' : 'rgba(255,255,255,0.95)';
-  const canvasBg = isDark ? '#1A1A1A' : '#F5F5F5';
+  const canvasBg = isDark ? '#1A1A1A' : '#F0F0F0';
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#000' : '#F9F9F9' }]}>
@@ -147,9 +152,9 @@ export const ZenGardenGame = ({ onComplete, onBack }: ZenGardenGameProps) => {
           <Text style={[styles.title, { color: textColor }]}>Zen Garden</Text>
           <View style={styles.premiumBadge}>
             <LinearGradient
-              colors={['#FFD700', '#FFA500']}
+              colors={['#FF9800', '#F57C00']}
               start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+              end={{ x: 1, y: 0 }}
               style={styles.premiumGradient}
             >
               <Text style={styles.premiumText}>PRO</Text>
@@ -225,8 +230,9 @@ export const ZenGardenGame = ({ onComplete, onBack }: ZenGardenGameProps) => {
 
         {paths.length === 0 && !isDrawing && (
           <View style={styles.emptyState}>
+            <Flower2 size={24} color={subText} style={{ marginBottom: 8 }} />
             <Text style={[styles.emptyText, { color: subText }]}>
-              🌸 Draw to create your zen garden
+              Draw to create your zen garden
             </Text>
           </View>
         )}
@@ -257,17 +263,23 @@ export const ZenGardenGame = ({ onComplete, onBack }: ZenGardenGameProps) => {
           onPress={clearCanvas}
           activeOpacity={0.7}
         >
-          <Text style={[styles.clearText, { color: '#FF5252' }]}>
-            🗑️ Clear
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Trash2 size={16} color="#FF5252" style={{ marginRight: 6 }} />
+            <Text style={[styles.clearText, { color: '#FF5252' }]}>
+              Clear
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
 
       {/* Info */}
       <View style={[styles.infoCard, { backgroundColor: cardBg }]}>
-        <Text style={[styles.infoText, { color: subText }]}>
-          💡 Draw slow, flowing patterns to achieve mindfulness and relaxation
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+          <Lightbulb size={16} color={subText} style={{ marginRight: 6 }} />
+          <Text style={[styles.infoText, { color: subText }]}>
+            Draw slow, flowing patterns to achieve mindfulness and relaxation
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -408,5 +420,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 18,
+    flex: 1,
   },
 });

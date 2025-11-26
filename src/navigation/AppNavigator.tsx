@@ -43,7 +43,7 @@ import { ExercisesScreen } from "../screens/progress/ExercisesScreen";
 import { SelfieProgressScreen } from "../screens/progress/SelfieProgressScreen";
 import { AIPhotoAnalysisScreen } from "../screens/ai/AIPhotoAnalysisScreen";
 import { TransformationPredictionScreen } from "../screens/ai/TransformationPredictionScreen";
-import {MyCommunityPost } from "../screens/community/MyCommunityPost";
+import { MyCommunityPost } from "../screens/community/MyCommunityPost";
 
 // 👥 COMMUNITY IMPORTS
 import { SuccessStories } from "../screens/community/SuccessStories";
@@ -224,8 +224,8 @@ export const AppNavigator = ({ onLogout }: AppNavigatorProps) => {
       case "community":
         return <CommunityHub onNavigate={navigateTo} />;
 
-        case "myCommunityPost": // <--- ADD THIS NEW CASE
-         return <MyCommunityPost onNavigate={navigateTo} />;
+      case "myCommunityPost": // <--- ADD THIS NEW CASE
+        return <MyCommunityPost onNavigate={navigateTo} />;
 
       case "communityFeed":
         return <CommunityFeedScreen onNavigate={navigateTo} />;
@@ -246,7 +246,7 @@ export const AppNavigator = ({ onLogout }: AppNavigatorProps) => {
             onNavigate={navigateTo}
             onBack={() => {
               useCommunityStore.getState().setSelectedPostId(null);
-              navigateTo("communityFeed");
+              navigateTo("community");
             }}
           />
         );
@@ -574,8 +574,8 @@ export const AppNavigator = ({ onLogout }: AppNavigatorProps) => {
     currentScreen !== "createPost" &&
     currentScreen !== "postDetail" &&
     currentScreen !== "userProfile" &&
-    currentScreen !== "communitySettings"&&
-    currentScreen !== "myCommunityPost"; 
+    currentScreen !== "communitySettings" &&
+    currentScreen !== "myCommunityPost";
 
   const showFloatingButtons = currentScreen === "dashboard";
 
@@ -614,8 +614,6 @@ export const AppNavigator = ({ onLogout }: AppNavigatorProps) => {
     currentScreen === "socialSharing" ||
     currentScreen === "notificationSettings" ||
     currentScreen === "trackingDashboard" ||
-    currentScreen === "createPost" ||
-    currentScreen === "postDetail" ||
     currentScreen === "userProfile" ||
     currentScreen === "communitySettings";
 
@@ -652,7 +650,6 @@ export const AppNavigator = ({ onLogout }: AppNavigatorProps) => {
     if (
       [
         "createPost",
-        "postDetail",
         "userProfile",
         "successStories",
         "successStoriesAlt",

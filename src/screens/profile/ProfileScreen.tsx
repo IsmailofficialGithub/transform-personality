@@ -11,6 +11,7 @@ import {
   TextInput,
   Modal,
 } from "react-native";
+import { ChevronRight, Heart } from 'lucide-react-native';
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
@@ -21,6 +22,7 @@ import { useHabitStore } from "../../store/habitStore";
 import { useThemeStore } from "../../store/themeStore";
 import { usePremium } from "../../hooks/usePremium";
 import { PremiumTestPanel } from "../../components/premium/PremiumTestPanel";
+import { useAuthStore } from "../../store/authStore";
 
 interface UserProfile {
   name: string;
@@ -39,15 +41,16 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
   const colors = useThemeStore((state) => state.colors);
   const isDark = useThemeStore((state) => state.isDark);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
+  const { user } = useAuthStore();
 
   // 💎 Premium hook
   const { isPremium, isTrialActive, trialDaysLeft, refreshStatus } =
     usePremium();
 
   const [profile, setProfile] = useState<UserProfile>({
-    name: "Warrior",
-    email: "user@transform.app",
-    profileImage: null,
+    name: user?.full_name || "Warrior",
+    email: user?.email || "user@transform.app",
+    profileImage: user?.avatar_url || null,
     joinedDate: new Date().toISOString(),
   });
 
@@ -60,13 +63,31 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
+    if (user) {
+      setProfile(prev => ({
+        ...prev,
+        name: user.full_name || prev.name,
+        email: user.email || prev.email,
+        profileImage: user.avatar_url || prev.profileImage,
+      }));
+    }
     loadProfile();
-  }, []);
+  }, [user]);
 
   const loadProfile = async () => {
     try {
       const stored = await AsyncStorage.getItem("userProfile");
-      if (stored) setProfile(JSON.parse(stored));
+      if (stored) {
+        const storedProfile = JSON.parse(stored);
+        setProfile(prev => ({
+          ...prev,
+          ...storedProfile,
+          // Prioritize auth store data if available
+          name: user?.full_name || storedProfile.name,
+          email: user?.email || storedProfile.email,
+          profileImage: user?.avatar_url || storedProfile.profileImage,
+        }));
+      }
     } catch (error) {
       console.error("Error loading profile:", error);
     }
@@ -251,9 +272,9 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
-      { 
-        text: "Logout", 
-        style: "destructive", 
+      {
+        text: "Logout",
+        style: "destructive",
         onPress: () => {
           Toast.show("Logging out...", {
             duration: Toast.durations.SHORT,
@@ -427,7 +448,7 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
               <Text style={[styles.settingTitle, { color: textColor }]}>
                 Edit Profile
               </Text>
-              <Text style={[styles.settingArrow, { color: subText }]}>›</Text>
+              <ChevronRight size={20} color={subText} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setShowPasswordModal(true)}
@@ -436,7 +457,7 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
               <Text style={[styles.settingTitle, { color: textColor }]}>
                 Change Password
               </Text>
-              <Text style={[styles.settingArrow, { color: subText }]}>›</Text>
+              <ChevronRight size={20} color={subText} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => onNavigate?.("myCommunityPost")}
@@ -445,7 +466,7 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
               <Text style={[styles.settingTitle, { color: textColor }]}>
                 My Community Posts
               </Text>
-              <Text style={[styles.settingArrow, { color: subText }]}>›</Text>
+              <ChevronRight size={20} color={subText} />
             </TouchableOpacity>
           </View>
 
@@ -476,7 +497,7 @@ export const ProfileScreen = ({ onLogout, onNavigate }: ProfileScreenProps) => {
               <Text style={[styles.settingTitle, { color: "#FF5252" }]}>
                 Clear All Data
               </Text>
-              <Text style={[styles.settingArrow, { color: subText }]}>›</Text>
+              <ChevronRight size={20} color={subText} />
             </TouchableOpacity>
           </View>
         </View>

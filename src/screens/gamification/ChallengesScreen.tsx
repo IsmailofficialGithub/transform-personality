@@ -4,12 +4,19 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../../store/themeStore';
 import { SIZES } from '../../utils/theme';
+import { Flame, Gamepad2, ClipboardList, Swords } from 'lucide-react-native';
+
+const IconMap: Record<string, any> = {
+  Flame,
+  Gamepad2,
+  ClipboardList,
+  Swords,
+};
 
 interface Challenge {
   id: string;
@@ -31,7 +38,7 @@ const CHALLENGES: Challenge[] = [
     description: 'Maintain your streak for 7 consecutive days',
     type: 'weekly',
     xpReward: 100,
-    icon: '🔥',
+    icon: 'Flame',
     color: ['#FF6B6B', '#FF8E53'],
     progress: 3,
     target: 7,
@@ -43,7 +50,7 @@ const CHALLENGES: Challenge[] = [
     description: 'Play any 3 games to distract from urges',
     type: 'daily',
     xpReward: 50,
-    icon: '🎮',
+    icon: 'Gamepad2',
     color: ['#667EEA', '#764BA2'],
     progress: 1,
     target: 3,
@@ -55,7 +62,7 @@ const CHALLENGES: Challenge[] = [
     description: 'Track 5 urges this week',
     type: 'weekly',
     xpReward: 75,
-    icon: '📝',
+    icon: 'ClipboardList',
     color: ['#00E676', '#00C853'],
     progress: 2,
     target: 5,
@@ -67,7 +74,7 @@ const CHALLENGES: Challenge[] = [
     description: 'Reach 30 days clean',
     type: 'special',
     xpReward: 500,
-    icon: '⚔️',
+    icon: 'Swords',
     color: ['#FFD700', '#FFA500'],
     progress: 12,
     target: 30,
@@ -96,7 +103,7 @@ export const ChallengesScreen = () => {
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#000' : '#F9F9F9' }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -110,7 +117,8 @@ export const ChallengesScreen = () => {
 
         {challenges.map((challenge) => {
           const progressPercent = (challenge.progress / challenge.target) * 100;
-          
+          const Icon = IconMap[challenge.icon] || Flame;
+
           return (
             <View
               key={challenge.id}
@@ -118,7 +126,7 @@ export const ChallengesScreen = () => {
             >
               <View style={styles.challengeHeader}>
                 <View style={[styles.iconContainer, { backgroundColor: challenge.color[0] + '20' }]}>
-                  <Text style={styles.icon}>{challenge.icon}</Text>
+                  <Icon size={28} color={challenge.color[0]} />
                 </View>
                 <View style={styles.challengeInfo}>
                   <View style={styles.challengeTitleRow}>
@@ -212,9 +220,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  icon: {
-    fontSize: 28,
-  },
   challengeInfo: {
     flex: 1,
   },
@@ -279,4 +284,3 @@ const styles = StyleSheet.create({
     color: '#00E676',
   },
 });
-

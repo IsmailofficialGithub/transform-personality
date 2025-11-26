@@ -14,6 +14,8 @@ import { useThemeStore } from "../store/themeStore";
 // Utils
 import { SIZES } from "../utils/theme";
 
+import { Home, Users, BarChart2, Gamepad2, User } from "lucide-react-native";
+
 // Types
 import type { Screen } from "./AppNavigator";
 
@@ -32,11 +34,11 @@ export const BottomNavigation = ({
   const isDark = useThemeStore((state) => state.isDark);
 
   const tabs = [
-    { screen: "dashboard" as Screen, icon: "🏠", label: "Home" },
-    { screen: "communityFeed" as Screen, icon: "💬", label: "Community" },
-    { screen: "stats" as Screen, icon: "📊", label: "Stats" },
-    { screen: "games" as Screen, icon: "🎮", label: "Games" },
-    { screen: "profile" as Screen, icon: "👤", label: "Profile" },
+    { screen: "dashboard" as Screen, Icon: Home, label: "Home" },
+    { screen: "community" as Screen, Icon: Users, label: "Community" },
+    { screen: "stats" as Screen, Icon: BarChart2, label: "Stats" },
+    { screen: "games" as Screen, Icon: Gamepad2, label: "Games" },
+    { screen: "profile" as Screen, Icon: User, label: "Profile" },
   ];
 
   return (
@@ -45,19 +47,20 @@ export const BottomNavigation = ({
         styles.container,
         {
           backgroundColor: isDark ? "#101010" : "#FFFFFF",
-          borderTopColor: isDark ? "#222" : "#E0E0E0",
+          borderTopColor: isDark ? "#222" : "#F0F0F0",
         },
       ]}
     >
       {tabs.map((tab) => {
         const isActive = currentScreen === tab.screen;
+        const IconComponent = tab.Icon;
 
         return (
           <TouchableOpacity
             key={tab.screen}
             style={styles.tab}
             onPress={() => onNavigate(tab.screen)}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
           >
             {isActive ? (
               <LinearGradient
@@ -66,29 +69,15 @@ export const BottomNavigation = ({
                 end={{ x: 1, y: 1 }}
                 style={styles.activeTab}
               >
-                <Text style={[styles.activeIcon, { color: "#FFF" }]}>
-                  {tab.icon}
-                </Text>
+                <IconComponent size={24} color="#FFF" strokeWidth={2.5} />
               </LinearGradient>
             ) : (
-              <View
-                style={[
-                  styles.inactiveTab,
-                  {
-                    backgroundColor: isDark ? "#1E1E1E" : "#F4F4F4",
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.icon,
-                    {
-                      color: isDark ? "rgba(255,255,255,0.7)" : "#555",
-                    },
-                  ]}
-                >
-                  {tab.icon}
-                </Text>
+              <View style={styles.inactiveTab}>
+                <IconComponent
+                  size={24}
+                  color={isDark ? "rgba(255,255,255,0.5)" : "#9CA3AF"}
+                  strokeWidth={2}
+                />
               </View>
             )}
             <Text
@@ -98,9 +87,9 @@ export const BottomNavigation = ({
                   color: isActive
                     ? colors.primary
                     : isDark
-                      ? "rgba(255,255,255,0.6)"
-                      : "#555",
-                  fontWeight: isActive ? "700" : "600",
+                      ? "rgba(255,255,255,0.5)"
+                      : "#9CA3AF",
+                  fontWeight: isActive ? "600" : "500",
                 },
               ]}
             >
@@ -117,49 +106,43 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     borderTopWidth: 1,
-    paddingVertical: 10,
-    paddingBottom: 25,
+    paddingVertical: 12,
+    paddingBottom: 28,
     justifyContent: "space-around",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 6,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 10,
   },
   tab: {
     flex: 1,
     alignItems: "center",
+    justifyContent: "center",
   },
   activeTab: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 4,
-    shadowColor: "#000",
+    shadowColor: "#8B5CF6",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 6,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   inactiveTab: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 48,
+    height: 48,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 4,
   },
-  icon: {
-    fontSize: 22,
-  },
-  activeIcon: {
-    fontSize: 22,
-    fontWeight: "700",
-  },
   label: {
-    fontSize: SIZES.tiny,
+    fontSize: 10,
     marginTop: 2,
+    letterSpacing: 0.2,
   },
 });

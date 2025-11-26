@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SIZES } from '../../utils/theme';
 import { useThemeStore } from '../../store/themeStore';
+import { Zap } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -30,17 +31,17 @@ export const ReactionTimeGame = ({ onComplete, onBack }: ReactionTimeGameProps) 
   const [reactionTime, setReactionTime] = useState<number>(0);
   const [attempts, setAttempts] = useState<number[]>([]);
   const [round, setRound] = useState(1);
-  
+
   const startTimeRef = useRef<number>(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (gameState === 'ready') {
       // Random delay between 2-5 seconds
       const delay = 2000 + Math.random() * 3000;
-      
+
       timeoutRef.current = setTimeout(() => {
         setGameState('active');
         startTimeRef.current = Date.now();
@@ -115,7 +116,7 @@ export const ReactionTimeGame = ({ onComplete, onBack }: ReactionTimeGameProps) 
 
     setTimeout(() => {
       Alert.alert(
-        '🎉 Game Complete!',
+        'Game Complete!',
         `Average: ${Math.floor(avgTime)}ms\nBest: ${bestTime}ms\n\nScore: ${score}`,
         [
           {
@@ -197,7 +198,8 @@ export const ReactionTimeGame = ({ onComplete, onBack }: ReactionTimeGameProps) 
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
           <Text style={[styles.backText, { color: textColor }]}>← Back</Text>
         </TouchableOpacity>
-        <Text style={[styles.title, { color: textColor }]}>Reaction Challenge</Text>
+        <View style={styles.placeholder} />
+        <Text style={[styles.title, { color: textColor }]}>Reaction Time</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -272,9 +274,12 @@ export const ReactionTimeGame = ({ onComplete, onBack }: ReactionTimeGameProps) 
 
       {/* Instructions */}
       <View style={[styles.instructionsCard, { backgroundColor: cardBg }]}>
-        <Text style={[styles.instructionsText, { color: subText }]}>
-          ⚡ Tap when the screen turns green. Complete 5 rounds to see your average reaction time!
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+          <Zap size={20} color={subText} style={{ marginRight: 8 }} />
+          <Text style={[styles.instructionsText, { color: subText }]}>
+            Tap when the screen turns green. Complete 5 rounds to see your average reaction time!
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -399,5 +404,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     lineHeight: 20,
+    flex: 1,
   },
 });

@@ -10,6 +10,15 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../../store/themeStore';
 import { SIZES } from '../../utils/theme';
+import { Moon, Waves, Swords, Trophy, Gamepad2 } from 'lucide-react-native';
+
+const IconMap: Record<string, any> = {
+  Moon,
+  Waves,
+  Swords,
+  Trophy,
+  Gamepad2,
+};
 
 interface Reward {
   id: string;
@@ -28,7 +37,7 @@ const REWARDS: Reward[] = [
     name: 'Dark Theme',
     description: 'Unlock the dark theme',
     xpCost: 100,
-    icon: '🌙',
+    icon: 'Moon',
     category: 'theme',
     unlocked: false,
     color: ['#1A1A1A', '#2D2D2D'],
@@ -38,7 +47,7 @@ const REWARDS: Reward[] = [
     name: 'Ocean Theme',
     description: 'Beautiful blue ocean theme',
     xpCost: 200,
-    icon: '🌊',
+    icon: 'Waves',
     category: 'theme',
     unlocked: false,
     color: ['#00BCD4', '#0097A7'],
@@ -48,7 +57,7 @@ const REWARDS: Reward[] = [
     name: 'Warrior Avatar',
     description: 'Exclusive warrior avatar',
     xpCost: 150,
-    icon: '⚔️',
+    icon: 'Swords',
     category: 'avatar',
     unlocked: false,
     color: ['#FF6B6B', '#FF8E53'],
@@ -58,7 +67,7 @@ const REWARDS: Reward[] = [
     name: 'Champion Badge',
     description: 'Show off your achievement',
     xpCost: 300,
-    icon: '🏆',
+    icon: 'Trophy',
     category: 'badge',
     unlocked: false,
     color: ['#FFD700', '#FFA500'],
@@ -68,7 +77,7 @@ const REWARDS: Reward[] = [
     name: 'Premium Games Access',
     description: 'Unlock all premium games for 7 days',
     xpCost: 500,
-    icon: '🎮',
+    icon: 'Gamepad2',
     category: 'feature',
     unlocked: false,
     color: ['#667EEA', '#764BA2'],
@@ -87,7 +96,7 @@ export const RewardsShop = () => {
 
   const handlePurchase = (reward: Reward) => {
     if (currentXP >= reward.xpCost && !reward.unlocked) {
-      setRewards(rewards.map(r => 
+      setRewards(rewards.map(r =>
         r.id === reward.id ? { ...r, unlocked: true } : r
       ));
       // TODO: Deduct XP from store
@@ -107,7 +116,7 @@ export const RewardsShop = () => {
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#000' : '#F9F9F9' }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -132,7 +141,8 @@ export const RewardsShop = () => {
           {rewards.map((reward) => {
             const canAfford = currentXP >= reward.xpCost;
             const isUnlocked = reward.unlocked;
-            
+            const Icon = IconMap[reward.icon] || Moon;
+
             return (
               <TouchableOpacity
                 key={reward.id}
@@ -151,9 +161,9 @@ export const RewardsShop = () => {
                   end={{ x: 1, y: 1 }}
                   style={styles.rewardIconContainer}
                 >
-                  <Text style={styles.rewardIcon}>{reward.icon}</Text>
+                  <Icon size={40} color="#FFF" />
                 </LinearGradient>
-                
+
                 <View style={styles.rewardInfo}>
                   <View style={styles.categoryBadge}>
                     <Text style={[styles.categoryText, { color: reward.color[0] }]}>
@@ -258,9 +268,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  rewardIcon: {
-    fontSize: 40,
-  },
   rewardInfo: {
     width: '100%',
     alignItems: 'center',
@@ -313,4 +320,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-

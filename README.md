@@ -14,6 +14,737 @@
 11. [Package Dependencies](#package-dependencies)
 12. [Development Setup](#development-setup)
 
+
+## Supabase public Database
+
+  -- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.achievements (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  habit_id uuid,
+  achievement_type text NOT NULL,
+  unlocked_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT achievements_pkey PRIMARY KEY (id),
+  CONSTRAINT achievements_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.comment_likes (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  comment_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT comment_likes_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.community_posts (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  author_id uuid NOT NULL,
+  title text NOT NULL CHECK (char_length(title) >= 3 AND char_length(title) <= 200),
+  content text NOT NULL CHECK (char_length(content) >= 10),
+  category text NOT NULL CHECK (category = ANY (ARRAY['success'::text, 'support'::text, 'question'::text, 'motivation'::text, 'general'::text])),
+  images ARRAY DEFAULT ARRAY[]::text[],
+  likes_count integer DEFAULT 0,
+  comments_count integer DEFAULT 0,
+  views_count integer DEFAULT 0,
+  is_pinned boolean DEFAULT false,
+  is_reported boolean DEFAULT false,
+  is_deleted boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT community_posts_pkey PRIMARY KEY (id),
+  CONSTRAINT community_posts_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.user_profiles(id)
+);
+CREATE TABLE public.content_reports (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  reporter_id uuid NOT NULL,
+  content_type text NOT NULL CHECK (content_type = ANY (ARRAY['post'::text, 'comment'::text, 'user'::text])),
+  content_id uuid NOT NULL,
+  reason text NOT NULL CHECK (reason = ANY (ARRAY['spam'::text, 'harassment'::text, 'inappropriate'::text, 'misinformation'::text, 'other'::text])),
+  description text,
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'reviewed'::text, 'resolved'::text, 'dismissed'::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  reviewed_at timestamp with time zone,
+  reviewed_by uuid,
+  CONSTRAINT content_reports_pkey PRIMARY KEY (id),
+  CONSTRAINT content_reports_reporter_id_fkey FOREIGN KEY (reporter_id) REFERENCES public.user_profiles(id),
+  CONSTRAINT content_reports_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES public.user_profiles(id)
+);
+CREATE TABLE public.event_members (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  event_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  joined_at timestamp with time zone DEFAULT now(),
+  permission text DEFAULT 'write'::text CHECK (permission = ANY (ARRAY['read'::text, 'write'::text])),
+  CONSTRAINT event_members_pkey PRIMARY KEY (id),
+  CONSTRAINT event_members_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id)
+);
+CREATE TABLE public.events (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  description text,
+  host_user_id uuid NOT NULL,
+  start_time timestamp with time zone NOT NULL,
+  end_time timestamp with time zone NOT NULL,
+  google_drive_folder_id text,
+  s3_bucket_path text,
+  share_link text NOT NULL UNIQUE,
+  share_token text NOT NULL UNIQUE,
+  is_active boolean DEFAULT true,
+  plan_type text DEFAULT 'free'::text CHECK (plan_type = ANY (ARRAY['free'::text, 'paid'::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT events_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.gamification (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid UNIQUE,
+  xp integer DEFAULT 0,
+  level integer DEFAULT 1,
+  streak integer DEFAULT 0,
+  last_activity date,
+  badges jsonb DEFAULT '[]'::jsonb,
+  updated_at timestamp with time zone DEFAULT now(),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT gamification_pkey PRIMARY KEY (id),
+  CONSTRAINT gamification_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.habit_progress (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid,
+  habit_id uuid,
+  progress_date date DEFAULT CURRENT_DATE,
+  status text CHECK (status = ANY (ARRAY['completed'::text, 'skipped'::text, 'failed'::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT habit_progress_pkey PRIMARY KEY (id),
+  CONSTRAINT habit_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT habit_progress_habit_id_fkey FOREIGN KEY (habit_id) REFERENCES public.habits(id)
+);
+CREATE TABLE public.habits (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid,
+  name text NOT NULL,
+  description text,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT habits_pkey PRIMARY KEY (id),
+  CONSTRAINT habits_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.media_files (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  event_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  file_name text NOT NULL,
+  file_path text NOT NULL,
+  file_type text NOT NULL CHECK (file_type = ANY (ARRAY['image'::text, 'video'::text])),
+  file_size bigint NOT NULL,
+  mime_type text NOT NULL,
+  width integer,
+  height integer,
+  duration integer,
+  local_uri text NOT NULL,
+  remote_uri text,
+  thumbnail_uri text,
+  upload_status text DEFAULT 'pending'::text CHECK (upload_status = ANY (ARRAY['pending'::text, 'uploading'::text, 'completed'::text, 'failed'::text])),
+  upload_progress integer DEFAULT 0,
+  error_message text,
+  created_at timestamp with time zone DEFAULT now(),
+  uploaded_at timestamp with time zone,
+  CONSTRAINT media_files_pkey PRIMARY KEY (id),
+  CONSTRAINT media_files_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id)
+);
+CREATE TABLE public.post_comments (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  post_id uuid NOT NULL,
+  author_id uuid NOT NULL,
+  parent_comment_id uuid,
+  content text NOT NULL CHECK (char_length(content) >= 1 AND char_length(content) <= 1000),
+  likes_count integer DEFAULT 0,
+  is_deleted boolean DEFAULT false,
+  is_reported boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT post_comments_pkey PRIMARY KEY (id),
+  CONSTRAINT post_comments_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.community_posts(id),
+  CONSTRAINT post_comments_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.user_profiles(id),
+  CONSTRAINT post_comments_parent_comment_id_fkey FOREIGN KEY (parent_comment_id) REFERENCES public.post_comments(id)
+);
+CREATE TABLE public.post_likes (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  post_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT post_likes_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.rewards (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid,
+  title text NOT NULL,
+  description text,
+  points integer DEFAULT 0,
+  claimed boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT rewards_pkey PRIMARY KEY (id),
+  CONSTRAINT rewards_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.success_stories (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  author_id uuid NOT NULL,
+  title text NOT NULL,
+  story text NOT NULL CHECK (char_length(story) >= 50),
+  days_clean integer NOT NULL,
+  before_image_url text,
+  after_image_url text,
+  additional_images ARRAY DEFAULT ARRAY[]::text[],
+  likes_count integer DEFAULT 0,
+  views_count integer DEFAULT 0,
+  is_featured boolean DEFAULT false,
+  is_verified boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT success_stories_pkey PRIMARY KEY (id),
+  CONSTRAINT success_stories_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.user_profiles(id)
+);
+CREATE TABLE public.urges (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  habit_id uuid NOT NULL,
+  timestamp timestamp with time zone NOT NULL,
+  intensity integer NOT NULL CHECK (intensity >= 1 AND intensity <= 10),
+  trigger text,
+  notes text,
+  overcome boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT urges_pkey PRIMARY KEY (id),
+  CONSTRAINT urges_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.user_followers (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  follower_id uuid NOT NULL,
+  following_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_followers_pkey PRIMARY KEY (id),
+  CONSTRAINT user_followers_follower_id_fkey FOREIGN KEY (follower_id) REFERENCES public.user_profiles(id),
+  CONSTRAINT user_followers_following_id_fkey FOREIGN KEY (following_id) REFERENCES public.user_profiles(id)
+);
+CREATE TABLE public.user_notifications (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  type text NOT NULL CHECK (type = ANY (ARRAY['like'::text, 'comment'::text, 'follow'::text, 'mention'::text, 'achievement'::text, 'system'::text])),
+  title text NOT NULL,
+  message text NOT NULL,
+  related_user_id uuid,
+  related_post_id uuid,
+  related_comment_id uuid,
+  is_read boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT user_notifications_related_post_id_fkey FOREIGN KEY (related_post_id) REFERENCES public.community_posts(id),
+  CONSTRAINT user_notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id),
+  CONSTRAINT user_notifications_related_user_id_fkey FOREIGN KEY (related_user_id) REFERENCES public.user_profiles(id),
+  CONSTRAINT user_notifications_related_comment_id_fkey FOREIGN KEY (related_comment_id) REFERENCES public.post_comments(id)
+);
+CREATE TABLE public.user_profiles (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL UNIQUE,
+  username text NOT NULL UNIQUE CHECK (char_length(username) >= 3 AND char_length(username) <= 30),
+  display_name text,
+  bio text,
+  avatar_url text,
+  is_profile_public boolean DEFAULT false,
+  show_streak boolean DEFAULT true,
+  show_before_after boolean DEFAULT false,
+  show_success_stories boolean DEFAULT true,
+  total_days_clean integer DEFAULT 0,
+  current_streak integer DEFAULT 0,
+  longest_streak integer DEFAULT 0,
+  total_posts integer DEFAULT 0,
+  total_likes_received integer DEFAULT 0,
+  level integer DEFAULT 1,
+  xp integer DEFAULT 0,
+  badges jsonb DEFAULT '[]'::jsonb,
+  joined_at timestamp with time zone DEFAULT now(),
+  last_active timestamp with time zone DEFAULT now(),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT user_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+); 
+
+## supabase auth 
+
+  -- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE auth.audit_log_entries (
+  instance_id uuid,
+  id uuid NOT NULL,
+  payload json,
+  created_at timestamp with time zone,
+  ip_address character varying NOT NULL DEFAULT ''::character varying,
+  CONSTRAINT audit_log_entries_pkey PRIMARY KEY (id)
+);
+CREATE TABLE auth.flow_state (
+  id uuid NOT NULL,
+  user_id uuid,
+  auth_code text NOT NULL,
+  code_challenge_method USER-DEFINED NOT NULL,
+  code_challenge text NOT NULL,
+  provider_type text NOT NULL,
+  provider_access_token text,
+  provider_refresh_token text,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  authentication_method text NOT NULL,
+  auth_code_issued_at timestamp with time zone,
+  CONSTRAINT flow_state_pkey PRIMARY KEY (id)
+);
+CREATE TABLE auth.identities (
+  provider_id text NOT NULL,
+  user_id uuid NOT NULL,
+  identity_data jsonb NOT NULL,
+  provider text NOT NULL,
+  last_sign_in_at timestamp with time zone,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  email text DEFAULT lower((identity_data ->> 'email'::text)),
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  CONSTRAINT identities_pkey PRIMARY KEY (id),
+  CONSTRAINT identities_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE auth.instances (
+  id uuid NOT NULL,
+  uuid uuid,
+  raw_base_config text,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  CONSTRAINT instances_pkey PRIMARY KEY (id)
+);
+CREATE TABLE auth.mfa_amr_claims (
+  session_id uuid NOT NULL,
+  created_at timestamp with time zone NOT NULL,
+  updated_at timestamp with time zone NOT NULL,
+  authentication_method text NOT NULL,
+  id uuid NOT NULL,
+  CONSTRAINT mfa_amr_claims_pkey PRIMARY KEY (id),
+  CONSTRAINT mfa_amr_claims_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id)
+);
+CREATE TABLE auth.mfa_challenges (
+  id uuid NOT NULL,
+  factor_id uuid NOT NULL,
+  created_at timestamp with time zone NOT NULL,
+  verified_at timestamp with time zone,
+  ip_address inet NOT NULL,
+  otp_code text,
+  web_authn_session_data jsonb,
+  CONSTRAINT mfa_challenges_pkey PRIMARY KEY (id),
+  CONSTRAINT mfa_challenges_auth_factor_id_fkey FOREIGN KEY (factor_id) REFERENCES auth.mfa_factors(id)
+);
+CREATE TABLE auth.mfa_factors (
+  id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  friendly_name text,
+  factor_type USER-DEFINED NOT NULL,
+  status USER-DEFINED NOT NULL,
+  created_at timestamp with time zone NOT NULL,
+  updated_at timestamp with time zone NOT NULL,
+  secret text,
+  phone text,
+  last_challenged_at timestamp with time zone UNIQUE,
+  web_authn_credential jsonb,
+  web_authn_aaguid uuid,
+  last_webauthn_challenge_data jsonb,
+  CONSTRAINT mfa_factors_pkey PRIMARY KEY (id),
+  CONSTRAINT mfa_factors_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE auth.oauth_authorizations (
+  id uuid NOT NULL,
+  authorization_id text NOT NULL UNIQUE,
+  client_id uuid NOT NULL,
+  user_id uuid,
+  redirect_uri text NOT NULL CHECK (char_length(redirect_uri) <= 2048),
+  scope text NOT NULL CHECK (char_length(scope) <= 4096),
+  state text CHECK (char_length(state) <= 4096),
+  resource text CHECK (char_length(resource) <= 2048),
+  code_challenge text CHECK (char_length(code_challenge) <= 128),
+  code_challenge_method USER-DEFINED,
+  response_type USER-DEFINED NOT NULL DEFAULT 'code'::auth.oauth_response_type,
+  status USER-DEFINED NOT NULL DEFAULT 'pending'::auth.oauth_authorization_status,
+  authorization_code text UNIQUE CHECK (char_length(authorization_code) <= 255),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  expires_at timestamp with time zone NOT NULL DEFAULT (now() + '00:03:00'::interval),
+  approved_at timestamp with time zone,
+  CONSTRAINT oauth_authorizations_pkey PRIMARY KEY (id),
+  CONSTRAINT oauth_authorizations_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.oauth_clients(id),
+  CONSTRAINT oauth_authorizations_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE auth.oauth_clients (
+  id uuid NOT NULL,
+  client_secret_hash text,
+  registration_type USER-DEFINED NOT NULL,
+  redirect_uris text NOT NULL,
+  grant_types text NOT NULL,
+  client_name text CHECK (char_length(client_name) <= 1024),
+  client_uri text CHECK (char_length(client_uri) <= 2048),
+  logo_uri text CHECK (char_length(logo_uri) <= 2048),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp with time zone,
+  client_type USER-DEFINED NOT NULL DEFAULT 'confidential'::auth.oauth_client_type,
+  CONSTRAINT oauth_clients_pkey PRIMARY KEY (id)
+);
+CREATE TABLE auth.oauth_consents (
+  id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  client_id uuid NOT NULL,
+  scopes text NOT NULL CHECK (char_length(scopes) <= 2048),
+  granted_at timestamp with time zone NOT NULL DEFAULT now(),
+  revoked_at timestamp with time zone,
+  CONSTRAINT oauth_consents_pkey PRIMARY KEY (id),
+  CONSTRAINT oauth_consents_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT oauth_consents_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.oauth_clients(id)
+);
+CREATE TABLE auth.one_time_tokens (
+  id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  token_type USER-DEFINED NOT NULL,
+  token_hash text NOT NULL CHECK (char_length(token_hash) > 0),
+  relates_to text NOT NULL,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT one_time_tokens_pkey PRIMARY KEY (id),
+  CONSTRAINT one_time_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE auth.refresh_tokens (
+  instance_id uuid,
+  id bigint NOT NULL DEFAULT nextval('auth.refresh_tokens_id_seq'::regclass),
+  token character varying UNIQUE,
+  user_id character varying,
+  revoked boolean,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  parent character varying,
+  session_id uuid,
+  CONSTRAINT refresh_tokens_pkey PRIMARY KEY (id),
+  CONSTRAINT refresh_tokens_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id)
+);
+CREATE TABLE auth.saml_providers (
+  id uuid NOT NULL,
+  sso_provider_id uuid NOT NULL,
+  entity_id text NOT NULL UNIQUE CHECK (char_length(entity_id) > 0),
+  metadata_xml text NOT NULL CHECK (char_length(metadata_xml) > 0),
+  metadata_url text CHECK (metadata_url = NULL::text OR char_length(metadata_url) > 0),
+  attribute_mapping jsonb,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  name_id_format text,
+  CONSTRAINT saml_providers_pkey PRIMARY KEY (id),
+  CONSTRAINT saml_providers_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES auth.sso_providers(id)
+);
+CREATE TABLE auth.saml_relay_states (
+  id uuid NOT NULL,
+  sso_provider_id uuid NOT NULL,
+  request_id text NOT NULL CHECK (char_length(request_id) > 0),
+  for_email text,
+  redirect_to text,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  flow_state_id uuid,
+  CONSTRAINT saml_relay_states_pkey PRIMARY KEY (id),
+  CONSTRAINT saml_relay_states_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES auth.sso_providers(id),
+  CONSTRAINT saml_relay_states_flow_state_id_fkey FOREIGN KEY (flow_state_id) REFERENCES auth.flow_state(id)
+);
+CREATE TABLE auth.schema_migrations (
+  version character varying NOT NULL,
+  CONSTRAINT schema_migrations_pkey PRIMARY KEY (version)
+);
+CREATE TABLE auth.sessions (
+  id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  factor_id uuid,
+  aal USER-DEFINED,
+  not_after timestamp with time zone,
+  refreshed_at timestamp without time zone,
+  user_agent text,
+  ip inet,
+  tag text,
+  oauth_client_id uuid,
+  refresh_token_hmac_key text,
+  refresh_token_counter bigint,
+  CONSTRAINT sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT sessions_oauth_client_id_fkey FOREIGN KEY (oauth_client_id) REFERENCES auth.oauth_clients(id)
+);
+CREATE TABLE auth.sso_domains (
+  id uuid NOT NULL,
+  sso_provider_id uuid NOT NULL,
+  domain text NOT NULL CHECK (char_length(domain) > 0),
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  CONSTRAINT sso_domains_pkey PRIMARY KEY (id),
+  CONSTRAINT sso_domains_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES auth.sso_providers(id)
+);
+CREATE TABLE auth.sso_providers (
+  id uuid NOT NULL,
+  resource_id text CHECK (resource_id = NULL::text OR char_length(resource_id) > 0),
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  disabled boolean,
+  CONSTRAINT sso_providers_pkey PRIMARY KEY (id)
+);
+CREATE TABLE auth.users (
+  instance_id uuid,
+  id uuid NOT NULL,
+  aud character varying,
+  role character varying,
+  email character varying,
+  encrypted_password character varying,
+  email_confirmed_at timestamp with time zone,
+  invited_at timestamp with time zone,
+  confirmation_token character varying,
+  confirmation_sent_at timestamp with time zone,
+  recovery_token character varying,
+  recovery_sent_at timestamp with time zone,
+  email_change_token_new character varying,
+  email_change character varying,
+  email_change_sent_at timestamp with time zone,
+  last_sign_in_at timestamp with time zone,
+  raw_app_meta_data jsonb,
+  raw_user_meta_data jsonb,
+  is_super_admin boolean,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  phone text DEFAULT NULL::character varying UNIQUE,
+  phone_confirmed_at timestamp with time zone,
+  phone_change text DEFAULT ''::character varying,
+  phone_change_token character varying DEFAULT ''::character varying,
+  phone_change_sent_at timestamp with time zone,
+  confirmed_at timestamp with time zone DEFAULT LEAST(email_confirmed_at, phone_confirmed_at),
+  email_change_token_current character varying DEFAULT ''::character varying,
+  email_change_confirm_status smallint DEFAULT 0 CHECK (email_change_confirm_status >= 0 AND email_change_confirm_status <= 2),
+  banned_until timestamp with time zone,
+  reauthentication_token character varying DEFAULT ''::character varying,
+  reauthentication_sent_at timestamp with time zone,
+  is_sso_user boolean NOT NULL DEFAULT false,
+  deleted_at timestamp with time zone,
+  is_anonymous boolean NOT NULL DEFAULT false,
+  CONSTRAINT users_pkey PRIMARY KEY (id)
+);
+
+## functions 
+Name	Arguments	Return type	Security	
+
+decrement_comment_count
+comment_id uuid
+
+void
+
+Definer
+
+
+
+decrement_comment_count
+–
+
+trigger	
+Invoker
+
+
+
+decrement_post_likes
+–
+
+trigger	
+Invoker
+
+
+
+handle_new_user
+–
+
+trigger	
+Definer
+
+
+
+handle_updated_at
+–
+
+trigger	
+Invoker
+
+
+
+increment_comment_count
+comment_id uuid
+
+void
+
+Definer
+
+
+
+increment_comment_count
+–
+
+trigger	
+Invoker
+
+
+
+increment_post_comments
+–
+
+trigger	
+Invoker
+
+
+
+increment_post_comments_count
+post_id_input uuid
+
+void
+
+Definer
+
+
+
+increment_post_likes
+–
+
+trigger	
+Invoker
+
+
+
+increment_post_views
+post_id_input uuid
+
+void
+
+Definer
+
+
+
+moddatetime
+–
+
+trigger	
+Invoker
+
+
+
+update_updated_at_column
+–
+
+trigger	
+Invoker
+
+
+
+upsert_habit
+_user_id uuid, _name text, _description text, _is_active boolean DEFAULT true
+
+void
+
+Invoker
+
+
+## triggers 
+
+Name	Table	Function	Events	Orientation	Enabled	
+
+on_comment_removed
+post_comments
+decrement_comment_count
+AFTER DELETE
+ROW
+
+
+
+post_commented
+post_comments
+increment_post_comments
+AFTER INSERT
+ROW
+
+
+
+post_liked
+post_likes
+increment_post_likes
+AFTER INSERT
+ROW
+
+
+
+post_unliked
+post_likes
+decrement_post_likes
+AFTER DELETE
+ROW
+
+
+
+update_comments_updated_at
+post_comments
+update_updated_at_column
+BEFORE UPDATE
+ROW
+
+
+
+update_gamification_timestamp
+gamification
+moddatetime
+BEFORE UPDATE
+ROW
+
+
+
+update_habit_progress_timestamp
+habit_progress
+moddatetime
+BEFORE UPDATE
+ROW
+
+
+
+update_habits_timestamp
+habits
+moddatetime
+BEFORE UPDATE
+ROW
+
+
+
+update_posts_updated_at
+community_posts
+update_updated_at_column
+BEFORE UPDATE
+ROW
+
+
+
+update_stories_updated_at
+success_stories
+update_updated_at_column
+BEFORE UPDATE
+ROW
+
+
+
+update_user_profiles_updated_at
+user_profiles
+update_updated_at_column
+BEFORE UPDATE
+ROW
+
+
+
+
 ---
 
 ## 🎯 Project Overview
@@ -1195,8 +1926,207 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 - **React Native Docs**: https://reactnative.dev
 
 ---
+# Start development server
+npm start
+
+# Run on Android
+npm run android
+
+# Run on iOS
+npm run ios
+
+# Run on Web
+npm run web
+```
+
+### Environment Setup
+
+1. Create `.env` file:
+```
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+2. Set up Supabase:
+   - Create Supabase project
+   - Run migrations to create tables (see Database Schema section)
+   - Enable Storage for image uploads
+   - Configure RLS (Row Level Security) policies
+
+### Key Files to Know
+
+- **`App.tsx`** - App entry point, handles routing between auth/onboarding/app
+- **`src/navigation/AppNavigator.tsx`** - Main navigator, all screen routing
+- **`src/config/supabase.ts`** - Supabase client + database types
+- **`src/services/CommunityService.ts`** - All community operations
+- **`src/store/`** - All Zustand stores (auth, habits, community, theme, tracking)
+
+---
+
+## 🗺 Finding Functions & Features
+
+### Where is the login function?
+**Location**: `src/store/authStore.ts` → `signIn(email, password)`
+**Called from**: `src/screens/auth/LoginScreen.tsx`
+
+### Where is the like post function?
+**Location**: `src/services/CommunityService.ts` → `togglePostLike(postId)`
+**Called from**: `src/store/communityStore.ts` → `likePost(postId)`
+**Used in**: `src/screens/community/CommunityFeedScreen.tsx`, `src/screens/community/PostDetailScreen.tsx`
+
+### Where is the duplicate like prevention?
+**Location**: `src/services/CommunityService.ts` → `togglePostLike()` method
+**Implementation**:
+1. Checks if like exists
+2. Double-checks before insert (race condition prevention)
+3. Handles unique constraint violations gracefully
+
+### Where is the habit creation?
+**Location**: `src/store/habitStore.ts` → `addHabit(habit)`
+**Called from**: `src/screens/onboarding/HabitSelectionModal.tsx`
+
+### Where is the dashboard stats calculation?
+**Location**: `src/screens/dashboard/DashboardScreen.tsx`
+**Functions**:
+- `calculateDaysClean(quitDate)` - Calculates days since quit
+- `totalDaysClean` - Sum of all habit days
+- `longestStreak` - Max streak across all habits
+
+### Where is the navigation handled?
+**Location**: `src/navigation/AppNavigator.tsx`
+**Function**: `navigateTo(screen: Screen)` - Updates currentScreen state
+**Function**: `renderScreen()` - Renders screen based on currentScreen
+
+### Where is the toast notification setup?
+**Package**: `react-native-root-toast`
+**Usage**: `Toast.show(message, options)` throughout app
+**Examples**:
+- `src/screens/auth/LoginScreen.tsx` - Login success/error
+- `src/screens/dashboard/DashboardScreen.tsx` - Habit removal
+- `src/screens/community/CommunityFeedScreen.tsx` - Like errors
+
+### Where is the database schema defined?
+**Location**: `src/config/supabase.ts`
+**Interface**: `Database` - Complete type definition for all tables
+
+### Where is the theme configuration?
+**Location**: `src/utils/theme.ts`
+**Exports**: `SIZES`, `COLORS`, `FONTS`, `SHADOWS`, `EFFECTS`
+**Store**: `src/store/themeStore.ts` - Manages dark/light mode
+
+### Where are constants defined?
+**Location**: `src/utils/constants.ts` - General constants (HABIT_NAMES, MOTIVATIONAL_QUOTES)
+**Location**: `src/constants/community.ts` - Community constants (POST_CATEGORIES)
+**Location**: `src/constants/habits.ts` - Habit constants
+
+---
+
+## 🔐 Security & Best Practices
+
+### Authentication
+- Uses Supabase Auth with secure session management
+- Passwords never stored locally
+- Session persisted securely
+
+### Data Protection
+- Row Level Security (RLS) should be enabled on Supabase
+- User can only access their own data
+- Soft deletes for posts/comments (is_deleted flag)
+
+### Duplicate Prevention
+- Post likes: Unique constraint on (post_id, user_id)
+- Double-check before insert to prevent race conditions
+- Graceful error handling for constraint violations
+
+### Error Handling
+- Toast notifications for user feedback
+- Try-catch blocks in all async operations
+- Error boundaries for React errors
+
+---
+
+## 📝 Notes
+
+### Premium Features
+- All premium logic is **commented out**
+- `usePremium` hook always returns `isPremium: true`
+- All features are free and accessible
+
+### Image Uploads
+- Images uploaded to Supabase Storage
+- Public URLs stored in database
+- Supports multiple images per post
+
+### Offline Support
+- Habits and urge logs stored in AsyncStorage
+- Syncs to Supabase when online
+- Works offline for basic tracking
+
+### Performance
+- Pagination for posts and stories
+- Optimistic updates for likes
+- Image lazy loading
+- Animated transitions
+
+---
+
+## 🐛 Known Issues & Fixes Applied
+
+### Fixed Issues
+1. ✅ **Duplicate likes** - Fixed with double-check and unique constraint handling
+2. ✅ **Babel error** - Fixed by installing `react-refresh`
+3. ✅ **Import errors** - Fixed by reorganizing folder structure and updating paths
+4. ✅ **Premium restrictions** - Commented out, all features free
+5. ✅ **Multiple back buttons** - Removed, using AppNavigator for navigation
+6. ✅ **Bad error handling** - Replaced with toast notifications throughout
+
+---
+
+## 📞 Support & Development
+
+### Key Contacts
+- Supabase Project: Configure in `src/config/supabase.ts`
+- Environment Variables: Set in `.env` file
+
+### Common Tasks
+
+**Add a new screen**:
+1. Create screen in appropriate `src/screens/[feature]/` folder
+2. Add to `Screen` type in `src/navigation/AppNavigator.tsx`
+3. Add case in `renderScreen()` switch statement
+4. Add navigation button/link where needed
+
+**Add a new service**:
+1. Create file in `src/services/`
+2. Export as default singleton or class
+3. Import and use in components/stores
+
+**Add a new store**:
+1. Create file in `src/store/`
+2. Use Zustand `create()` with persistence
+3. Export hook (e.g., `useMyStore`)
+
+**Add a new constant**:
+1. Add to appropriate file in `src/constants/` or `src/utils/constants.ts`
+2. Export from `src/constants/index.ts` if in constants folder
+
+---
+
+## 🎓 Learning Resources
+
+- **Expo Docs**: https://docs.expo.dev
+- **Supabase Docs**: https://supabase.com/docs
+- **Zustand Docs**: https://zustand-demo.pmnd.rs
+- **React Native Docs**: https://reactnative.dev
+
+---
 
 **Last Updated**: After folder reorganization and import fixes
 **Version**: 1.0.0
-**Status**: Production-ready with all features implemented
+**Status**: Production-ready with all features implemented.
+**Latest Update**: 
+- **Community Hub**: Replaced basic feed with a premium `CommunityHub` featuring glassmorphic UI and enhanced visuals.
+- **UI Polish**: Enhanced typography, gradients, and animations throughout the community section.
 
+
+//

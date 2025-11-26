@@ -11,6 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SIZES } from '../../utils/theme';
 import { useThemeStore } from '../../store/themeStore';
+import { Wind, Star } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -84,7 +85,7 @@ export const BreathPacerGame = ({ onComplete, onBack }: BreathPacerGameProps) =>
   const moveToNextPhase = () => {
     const nextPhase = getNextPhase();
     setPhase(nextPhase);
-    
+
     if (nextPhase === 'inhale') {
       setCyclesCompleted(prev => prev + 1);
     }
@@ -97,8 +98,8 @@ export const BreathPacerGame = ({ onComplete, onBack }: BreathPacerGameProps) =>
   const animateCircle = () => {
     const targetScale = phase === 'inhale' ? 1 : phase === 'exhale' ? 0.5 : 0.75;
     const targetOpacity = phase === 'inhale' ? 1 : phase === 'exhale' ? 0.3 : 0.6;
-    const duration = phase === 'inhale' ? 4000 : phase === 'exhale' ? 8000 : 
-                     phase === 'hold' ? 7000 : 2000;
+    const duration = phase === 'inhale' ? 4000 : phase === 'exhale' ? 8000 :
+      phase === 'hold' ? 7000 : 2000;
 
     Animated.parallel([
       Animated.timing(scaleAnim, {
@@ -157,12 +158,8 @@ export const BreathPacerGame = ({ onComplete, onBack }: BreathPacerGameProps) =>
       <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={[styles.backText, { color: textColor }]}>← Back</Text>
-        </TouchableOpacity>
+      <View style={[styles.header, { justifyContent: 'center' }]}>
         <Text style={[styles.title, { color: textColor }]}>Breath Pacer</Text>
-        <View style={styles.placeholder} />
       </View>
 
       {/* Stats */}
@@ -172,7 +169,7 @@ export const BreathPacerGame = ({ onComplete, onBack }: BreathPacerGameProps) =>
             {cyclesCompleted}/6
           </Text>
           <Text style={[styles.statLabel, { color: subText }]}>Cycles</Text>
-        </View>
+        </View >
 
         <View style={[styles.statBox, { backgroundColor: cardBg }]}>
           <Text style={[styles.statValue, { color: textColor }]}>
@@ -180,10 +177,10 @@ export const BreathPacerGame = ({ onComplete, onBack }: BreathPacerGameProps) =>
           </Text>
           <Text style={[styles.statLabel, { color: subText }]}>Time</Text>
         </View>
-      </View>
+      </View >
 
       {/* Breathing Circle */}
-      <View style={styles.circleContainer}>
+      < View style={styles.circleContainer} >
         <Animated.View
           style={[
             styles.circle,
@@ -205,57 +202,67 @@ export const BreathPacerGame = ({ onComplete, onBack }: BreathPacerGameProps) =>
             )}
           </LinearGradient>
         </Animated.View>
-      </View>
+      </View >
 
       {/* Instructions */}
-      <View style={[styles.instructionsCard, { backgroundColor: cardBg }]}>
-        <Text style={[styles.instructionsTitle, { color: textColor }]}>
-          💨 {isActive ? 'Follow the circle' : 'Ready to begin?'}
-        </Text>
+      < View style={[styles.instructionsCard, { backgroundColor: cardBg }]} >
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          <Wind size={20} color={textColor} style={{ marginRight: 8 }} />
+          <Text style={[styles.instructionsTitle, { color: textColor, marginBottom: 0 }]}>
+            {isActive ? 'Follow the circle' : 'Ready to begin?'}
+          </Text>
+        </View>
         <Text style={[styles.instructionsText, { color: subText }]}>
           {isActive
             ? 'Breathe in sync with the expanding and contracting circle. Complete 6 cycles.'
             : 'Tap Start to begin a guided breathing session. This helps reduce anxiety and calm urges.'}
         </Text>
-      </View>
+      </View >
 
       {/* Control Button */}
-      {!isActive && (
-        <TouchableOpacity
-          style={styles.startButton}
-          onPress={startSession}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={['#00E676', '#00C853']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.startButtonGradient}
+      {
+        !isActive && (
+          <TouchableOpacity
+            style={styles.startButton}
+            onPress={startSession}
+            activeOpacity={0.8}
           >
-            <Text style={styles.startButtonText}>
-              {cyclesCompleted > 0 ? 'Continue Session' : 'Start Session'}
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      )}
+            <LinearGradient
+              colors={['#00E676', '#00C853']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.startButtonGradient}
+            >
+              <Text style={styles.startButtonText}>
+                {cyclesCompleted > 0 ? 'Continue Session' : 'Start Session'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        )
+      }
 
-      {isActive && (
-        <TouchableOpacity
-          style={styles.stopButton}
-          onPress={() => setIsActive(false)}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.stopButtonText, { color: '#FF5252' }]}>
-            Pause Session
-          </Text>
-        </TouchableOpacity>
-      )}
+      {
+        isActive && (
+          <TouchableOpacity
+            style={styles.stopButton}
+            onPress={() => setIsActive(false)}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.stopButtonText, { color: '#FF5252' }]}>
+              Pause Session
+            </Text>
+          </TouchableOpacity>
+        )
+      }
 
       {/* Benefits */}
       <View style={[styles.benefitsCard, { backgroundColor: cardBg }]}>
-        <Text style={[styles.benefitsTitle, { color: textColor }]}>
-          🌟 Benefits
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+          <Star size={16} color={textColor} style={{ marginRight: 8 }} />
+          <Text style={[styles.benefitsTitle, { color: textColor, marginBottom: 0 }]}>
+            Benefits
+          </Text>
+        </View>
         <View style={styles.benefitItem}>
           <Text style={styles.benefitBullet}>•</Text>
           <Text style={[styles.benefitText, { color: subText }]}>
@@ -275,7 +282,7 @@ export const BreathPacerGame = ({ onComplete, onBack }: BreathPacerGameProps) =>
           </Text>
         </View>
       </View>
-    </View>
+    </View >
   );
 };
 

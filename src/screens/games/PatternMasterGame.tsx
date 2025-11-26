@@ -79,7 +79,7 @@ export const PatternMasterGame = ({ onComplete, onBack }: PatternMasterGameProps
 
     const patternSize = Math.min(3 + currentLevel, 10);
     const newPattern: number[] = [];
-    
+
     while (newPattern.length < patternSize) {
       const randomCell = Math.floor(Math.random() * (GRID_SIZE * GRID_SIZE));
       if (!newPattern.includes(randomCell)) {
@@ -97,7 +97,7 @@ export const PatternMasterGame = ({ onComplete, onBack }: PatternMasterGameProps
     for (let i = 0; i < pat.length; i++) {
       await new Promise(resolve => setTimeout(resolve, 300));
       flashCell(pat[i]);
-      setGrid(prev => prev.map((cell, idx) => 
+      setGrid(prev => prev.map((cell, idx) =>
         idx === pat[i] ? { ...cell, isRevealed: true } : cell
       ));
       await new Promise(resolve => setTimeout(resolve, 600));
@@ -184,28 +184,12 @@ export const PatternMasterGame = ({ onComplete, onBack }: PatternMasterGameProps
       <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={[styles.backText, { color: textColor }]}>← Back</Text>
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={[styles.title, { color: textColor }]}>Pattern Master</Text>
-          <View style={styles.premiumBadge}>
-            <LinearGradient
-              colors={['#FFD700', '#FFA500']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.premiumGradient}
-            >
-              <Text style={styles.premiumText}>PRO</Text>
-            </LinearGradient>
-          </View>
-        </View>
-        <View style={styles.placeholder} />
+      <View style={[styles.header, { justifyContent: 'center' }]}>
+        <Text style={[styles.title, { color: textColor }]}>Pattern Master</Text>
       </View>
 
       {/* Stats */}
-      <View style={styles.statsRow}>
+      < View style={styles.statsRow} >
         <View style={[styles.statBox, { backgroundColor: cardBg }]}>
           <Text style={[styles.statValue, { color: textColor }]}>{level}</Text>
           <Text style={[styles.statLabel, { color: subText }]}>Level</Text>
@@ -222,19 +206,21 @@ export const PatternMasterGame = ({ onComplete, onBack }: PatternMasterGameProps
           </Text>
           <Text style={[styles.statLabel, { color: subText }]}>Time</Text>
         </View>
-      </View>
+      </View >
 
       {/* Status */}
-      {isPlaying && (
-        <View style={[styles.statusCard, { backgroundColor: cardBg }]}>
-          <Text style={[styles.statusText, { color: textColor }]}>
-            {isShowingPattern
-              ? 'Memorize the pattern...'
-              : `Recreate it (${userPattern.length}/${pattern.length})`
-            }
-          </Text>
-        </View>
-      )}
+      {
+        isPlaying && (
+          <View style={[styles.statusCard, { backgroundColor: cardBg }]}>
+            <Text style={[styles.statusText, { color: textColor }]}>
+              {isShowingPattern
+                ? 'Memorize the pattern...'
+                : `Recreate it (${userPattern.length}/${pattern.length})`
+              }
+            </Text>
+          </View>
+        )
+      }
 
       {/* Grid */}
       <View style={styles.gridContainer}>
@@ -258,8 +244,8 @@ export const PatternMasterGame = ({ onComplete, onBack }: PatternMasterGameProps
                     cell.isRevealed || cell.isActive
                       ? ['#667EEA', '#764BA2']
                       : isDark
-                      ? ['#2A2A2A', '#1A1A1A']
-                      : ['#F5F5F5', '#E5E5E5']
+                        ? ['#2A2A2A', '#1A1A1A']
+                        : ['#F5F5F5', '#E5E5E5']
                   }
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
@@ -276,57 +262,61 @@ export const PatternMasterGame = ({ onComplete, onBack }: PatternMasterGameProps
       </View>
 
       {/* Start Button */}
-      {!isPlaying && (
-        <View style={styles.startContainer}>
-          <View style={[styles.startCard, { backgroundColor: cardBg }]}>
-            <Text style={styles.startEmoji}>🔷</Text>
-            <Text style={[styles.startTitle, { color: textColor }]}>
-              Pattern Challenge
-            </Text>
-            <Text style={[styles.startDescription, { color: subText }]}>
-              Watch the pattern, then recreate it from memory.
-            </Text>
+      {
+        !isPlaying && (
+          <View style={styles.startContainer}>
+            <View style={[styles.startCard, { backgroundColor: cardBg }]}>
+              <Text style={styles.startEmoji}>🔷</Text>
+              <Text style={[styles.startTitle, { color: textColor }]}>
+                Pattern Challenge
+              </Text>
+              <Text style={[styles.startDescription, { color: subText }]}>
+                Watch the pattern, then recreate it from memory.
+              </Text>
 
-            <TouchableOpacity
-              style={styles.startButton}
-              onPress={startGame}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={['#9C27B0', '#7B1FA2']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.startButtonGradient}
+              <TouchableOpacity
+                style={styles.startButton}
+                onPress={startGame}
+                activeOpacity={0.8}
               >
-                <Text style={styles.startButtonText}>Start Challenge</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={['#9C27B0', '#7B1FA2']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.startButtonGradient}
+                >
+                  <Text style={styles.startButtonText}>Start Challenge</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      )}
+        )
+      }
 
       {/* Info */}
-      {!isPlaying && (
-        <View style={[styles.infoCard, { backgroundColor: cardBg }]}>
-          <Text style={[styles.infoTitle, { color: textColor }]}>Benefits</Text>
+      {
+        !isPlaying && (
+          <View style={[styles.infoCard, { backgroundColor: cardBg }]}>
+            <Text style={[styles.infoTitle, { color: textColor }]}>Benefits</Text>
 
-          <View style={styles.infoItem}>
-            <Text style={styles.infoBullet}>•</Text>
-            <Text style={[styles.infoText, { color: subText }]}>Memory training</Text>
-          </View>
+            <View style={styles.infoItem}>
+              <Text style={styles.infoBullet}>•</Text>
+              <Text style={[styles.infoText, { color: subText }]}>Memory training</Text>
+            </View>
 
-          <View style={styles.infoItem}>
-            <Text style={styles.infoBullet}>•</Text>
-            <Text style={[styles.infoText, { color: subText }]}>Pattern recognition</Text>
-          </View>
+            <View style={styles.infoItem}>
+              <Text style={styles.infoBullet}>•</Text>
+              <Text style={[styles.infoText, { color: subText }]}>Pattern recognition</Text>
+            </View>
 
-          <View style={styles.infoItem}>
-            <Text style={styles.infoBullet}>•</Text>
-            <Text style={[styles.infoText, { color: subText }]}>Neural development</Text>
+            <View style={styles.infoItem}>
+              <Text style={styles.infoBullet}>•</Text>
+              <Text style={[styles.infoText, { color: subText }]}>Neural development</Text>
+            </View>
           </View>
-        </View>
-      )}
-    </View>
+        )
+      }
+    </View >
   );
 };
 

@@ -4,13 +4,13 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useHabitStore } from '../../store/habitStore';
 import { useThemeStore } from '../../store/themeStore';
 import { SIZES } from '../../utils/theme';
+import { Trophy, Calendar, Gamepad2 } from 'lucide-react-native';
 
 const LEVELS = [
   { level: 1, name: 'Beginner', xpRequired: 0, color: ['#9E9E9E', '#757575'], description: 'Starting your journey' },
@@ -32,7 +32,7 @@ export const LevelsScreen = ({ onNavigate }: LevelsScreenProps) => {
   const { currentXP, currentLevel, nextLevel, progress } = useMemo(() => {
     const totalDays = habits.reduce((sum, h) => sum + h.currentStreak, 0);
     const currentXP = totalDays * 10; // 10 XP per day
-    
+
     let levelIndex = 0;
     for (let i = LEVELS.length - 1; i >= 0; i--) {
       if (currentXP >= LEVELS[i].xpRequired) {
@@ -40,10 +40,10 @@ export const LevelsScreen = ({ onNavigate }: LevelsScreenProps) => {
         break;
       }
     }
-    
+
     const currentLevel = LEVELS[levelIndex];
     const nextLevel = LEVELS[levelIndex + 1];
-    const progress = nextLevel 
+    const progress = nextLevel
       ? ((currentXP - currentLevel.xpRequired) / (nextLevel.xpRequired - currentLevel.xpRequired)) * 100
       : 100;
 
@@ -57,7 +57,7 @@ export const LevelsScreen = ({ onNavigate }: LevelsScreenProps) => {
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#000' : '#F9F9F9' }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -80,7 +80,7 @@ export const LevelsScreen = ({ onNavigate }: LevelsScreenProps) => {
             <Text style={styles.levelNumber}>{currentLevel.level}</Text>
             <Text style={styles.levelName}>{currentLevel.name}</Text>
           </LinearGradient>
-          
+
           <Text style={[styles.xpText, { color: textColor }]}>
             {currentXP.toLocaleString()} XP
           </Text>
@@ -103,7 +103,7 @@ export const LevelsScreen = ({ onNavigate }: LevelsScreenProps) => {
                   {Math.round(progress)}% to next level
                 </Text>
               </View>
-              
+
               <View style={styles.nextLevelInfo}>
                 <Text style={[styles.nextLevelLabel, { color: subText }]}>
                   Next: {nextLevel.name}
@@ -117,9 +117,12 @@ export const LevelsScreen = ({ onNavigate }: LevelsScreenProps) => {
 
           {!nextLevel && (
             <View style={styles.maxLevel}>
-              <Text style={[styles.maxLevelText, { color: colors.primary }]}>
-                🏆 Maximum Level Achieved!
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                <Trophy size={20} color={colors.primary} style={{ marginRight: 8 }} />
+                <Text style={[styles.maxLevelText, { color: colors.primary }]}>
+                  Maximum Level Achieved!
+                </Text>
+              </View>
             </View>
           )}
         </View>
@@ -132,7 +135,7 @@ export const LevelsScreen = ({ onNavigate }: LevelsScreenProps) => {
           {LEVELS.map((level, index) => {
             const isUnlocked = currentXP >= level.xpRequired;
             const isCurrent = level.level === currentLevel.level;
-            
+
             return (
               <View
                 key={level.level}
@@ -183,7 +186,7 @@ export const LevelsScreen = ({ onNavigate }: LevelsScreenProps) => {
             How to Earn XP
           </Text>
           <View style={styles.xpSourceItem}>
-            <Text style={styles.xpSourceIcon}>📅</Text>
+            <Calendar size={24} color={textColor} style={{ marginRight: 12 }} />
             <View style={styles.xpSourceInfo}>
               <Text style={[styles.xpSourceName, { color: textColor }]}>
                 Daily Streak
@@ -194,7 +197,7 @@ export const LevelsScreen = ({ onNavigate }: LevelsScreenProps) => {
             </View>
           </View>
           <View style={styles.xpSourceItem}>
-            <Text style={styles.xpSourceIcon}>🎮</Text>
+            <Gamepad2 size={24} color={textColor} style={{ marginRight: 12 }} />
             <View style={styles.xpSourceInfo}>
               <Text style={[styles.xpSourceName, { color: textColor }]}>
                 Play Games
@@ -205,7 +208,7 @@ export const LevelsScreen = ({ onNavigate }: LevelsScreenProps) => {
             </View>
           </View>
           <View style={styles.xpSourceItem}>
-            <Text style={styles.xpSourceIcon}>🏆</Text>
+            <Trophy size={24} color={textColor} style={{ marginRight: 12 }} />
             <View style={styles.xpSourceInfo}>
               <Text style={[styles.xpSourceName, { color: textColor }]}>
                 Achievements
@@ -383,10 +386,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  xpSourceIcon: {
-    fontSize: 32,
-    marginRight: 12,
-  },
   xpSourceInfo: {
     flex: 1,
   },
@@ -400,4 +399,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
