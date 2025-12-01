@@ -13,6 +13,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-root-toast';
+import { Bell } from 'lucide-react-native';
 import { SIZES } from '../../utils/theme';
 import {
   HABIT_IMAGES,
@@ -38,6 +39,7 @@ export const DashboardScreen = ({ onAddHabit, onNavigate }: DashboardProps) => {
   const isDark = useThemeStore((state) => state.isDark);
   const [quote, setQuote] = useState<string | null>(null);
   const [habitModalVisible, setHabitModalVisible] = useState(false);
+  const [notification_count, setNotification_count] = useState(4);
 
   const fadeAnim = useState(new Animated.Value(0))[0];
   const slideAnim = useState(new Animated.Value(30))[0];
@@ -93,9 +95,9 @@ export const DashboardScreen = ({ onAddHabit, onNavigate }: DashboardProps) => {
 
   const totalDaysClean = Array.isArray(habits)
     ? habits.reduce(
-        (sum, habit) => sum + calculateDaysClean(habit.quitDate),
-        0
-      )
+      (sum, habit) => sum + calculateDaysClean(habit.quitDate),
+      0
+    )
     : 0;
 
   const activeStreaks = Array.isArray(habits)
@@ -166,9 +168,13 @@ export const DashboardScreen = ({ onAddHabit, onNavigate }: DashboardProps) => {
                     { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
                   ]}
                 >
-                  <Text style={styles.notificationIcon}>🔔</Text>
+                  <Bell
+                    size={24}
+                    color={isDark ? '#FFF' : '#000'}
+                    strokeWidth={2}
+                  />
                   <View style={[styles.notificationBadge, { backgroundColor: '#FF3B30' }]}>
-                    <Text style={styles.notificationBadgeText}>3</Text>
+                    <Text style={styles.notificationBadgeText}>{notification_count}</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -199,8 +205,8 @@ export const DashboardScreen = ({ onAddHabit, onNavigate }: DashboardProps) => {
           <Animated.View
             style={[
               styles.statCardWrapper,
-              { 
-                opacity: fadeAnim, 
+              {
+                opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }],
               }
             ]}
@@ -220,8 +226,8 @@ export const DashboardScreen = ({ onAddHabit, onNavigate }: DashboardProps) => {
           <Animated.View
             style={[
               styles.statCardWrapper,
-              { 
-                opacity: fadeAnim, 
+              {
+                opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }],
               }
             ]}
@@ -295,7 +301,7 @@ export const DashboardScreen = ({ onAddHabit, onNavigate }: DashboardProps) => {
         {quote && (
           <View style={[styles.quoteCard, { backgroundColor: cardBg, borderColor }]}>
             <LinearGradient
-              colors={isDark 
+              colors={isDark
                 ? ['rgba(102, 126, 234, 0.15)', 'rgba(118, 75, 162, 0.15)']
                 : ['rgba(102, 126, 234, 0.08)', 'rgba(118, 75, 162, 0.08)']
               }
@@ -362,7 +368,7 @@ export const DashboardScreen = ({ onAddHabit, onNavigate }: DashboardProps) => {
           ) : (
             habits.map((habit, index) => {
               const daysClean = calculateDaysClean(habit.quitDate);
-              
+
               // Gradient colors based on habit type
               const getGradientColors = () => {
                 const gradients: Record<string, string[]> = {
@@ -386,7 +392,7 @@ export const DashboardScreen = ({ onAddHabit, onNavigate }: DashboardProps) => {
                   key={habit.id}
                   style={[
                     styles.habitCardWrapper,
-                    { 
+                    {
                       opacity: fadeAnim,
                       transform: [{ translateY: slideAnim }],
                     }
@@ -426,10 +432,10 @@ export const DashboardScreen = ({ onAddHabit, onNavigate }: DashboardProps) => {
                           <Text style={styles.habitCardDate}>
                             Since {habit.quitDate
                               ? new Date(habit.quitDate).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                })
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })
                               : 'Unknown'}
                           </Text>
                         </View>
