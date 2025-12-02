@@ -1,31 +1,23 @@
-import { StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { useAuthStore } from '../../stores/useAuthStore';
+import CheckIn from '../../components/CheckIn';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+export default function Dashboard() {
+  const { signOut, user } = useAuthStore();
 
-export default function TabOneScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+    <View className="flex-1 justify-center items-center bg-white p-4">
+      <Text className="text-2xl font-bold mb-4">Dashboard</Text>
+      <Text className="mb-4">Welcome, {user?.email}</Text>
+      
+      <CheckIn />
+
+      <TouchableOpacity
+        className="bg-red-500 p-3 rounded-lg mt-4"
+        onPress={() => signOut()}
+      >
+        <Text className="text-white font-bold">Sign Out</Text>
+      </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
