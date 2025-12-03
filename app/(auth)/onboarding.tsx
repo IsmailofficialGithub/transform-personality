@@ -9,12 +9,17 @@ import { User, Calendar, Target, Plus } from 'lucide-react-native';
 
 const HABIT_TYPES = [
   { value: 'smoking', label: 'Smoking' },
-  { value: 'pornography', label: 'Pornography' },
   { value: 'alcohol', label: 'Alcohol' },
-  { value: 'drugs', label: 'Drugs' },
   { value: 'gambling', label: 'Gambling' },
-  { value: 'social_media', label: 'Social Media' },
-  { value: 'gaming', label: 'Gaming' },
+  { value: 'gaming_addiction', label: 'Gaming Addiction' },
+  { value: 'pornography_addiction', label: 'Pornography Addiction' },
+  { value: 'substance_abuse', label: 'Substance Abuse' },
+  { value: 'social_media_overuse', label: 'Social Media Overuse' },
+  { value: 'junk_food', label: 'Junk Food / Overeating' },
+  { value: 'procrastination', label: 'Procrastination' },
+  { value: 'anger_issues', label: 'Anger Issues' },
+  { value: 'toxic_relationships', label: 'Toxic Relationships' },
+  { value: 'overspending', label: 'Overspending / Shopping Addiction' },
 ];
 
 export default function Onboarding() {
@@ -97,11 +102,13 @@ export default function Onboarding() {
         if (profileError) throw profileError;
       }
 
-      // Create habits (using simplified schema from OPTIMIZED_SCHEMA)
+      // Create habits with quit_date set to today
       const habitsToCreate = selectedHabits.map(habitType => ({
         user_id: user.id,
         name: HABIT_TYPES.find(h => h.value === habitType)?.label || habitType,
+        type: habitType,
         description: `Tracking ${HABIT_TYPES.find(h => h.value === habitType)?.label || habitType}`,
+        quit_date: new Date().toISOString(),
         is_active: true,
       }));
 
@@ -109,7 +116,10 @@ export default function Onboarding() {
         habitsToCreate.push({
           user_id: user.id,
           name: customHabit,
+          type: 'custom',
+          custom_name: customHabit,
           description: `Tracking ${customHabit}`,
+          quit_date: new Date().toISOString(),
           is_active: true,
         });
       }
