@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../config/supabase";
+import NotificationService from "../services/NotificationService";
 
 interface User {
   id: string;
@@ -39,9 +40,9 @@ export const useAuthStore = create<AuthStore>()(
       initialize: async () => {
         try {
           console.log("🔄 Initializing auth session...");
-          
+
           const { data: { session }, error } = await supabase.auth.getSession();
-          
+
           if (error) {
             console.error("❌ Session initialization error:", error);
             set({ user: null, initialized: true });
@@ -59,6 +60,8 @@ export const useAuthStore = create<AuthStore>()(
               },
               initialized: true,
             });
+            // Start listening for notifications
+            NotificationService.listenForInteractions(session.user.id);
           } else {
             console.log("ℹ️ No active session");
             set({ user: null, initialized: true });
@@ -67,7 +70,7 @@ export const useAuthStore = create<AuthStore>()(
           // Listen for auth changes
           supabase.auth.onAuthStateChange((event, session) => {
             console.log("🔔 Auth state changed:", event);
-            
+
             if (session?.user) {
               set({
                 user: {
@@ -77,8 +80,12 @@ export const useAuthStore = create<AuthStore>()(
                   avatar_url: session.user.user_metadata?.avatar_url || "",
                 },
               });
+              // Start listening for notifications
+              NotificationService.listenForInteractions(session.user.id);
             } else {
               set({ user: null });
+              // Stop listening
+              NotificationService.stopListening();
             }
           });
         } catch (error) {
@@ -90,13 +97,13 @@ export const useAuthStore = create<AuthStore>()(
       signUp: async (email, password, full_name) => {
         try {
           set({ loading: true });
-          
+
           console.log("📝 Attempting signup for:", email);
 
           const { data, error } = await supabase.auth.signUp({
             email: email.trim().toLowerCase(),
             password,
-            options: { 
+            options: {
               data: { full_name },
               emailRedirectTo: undefined, // Disable email confirmation redirect for mobile
             },
@@ -128,6 +135,10 @@ export const useAuthStore = create<AuthStore>()(
             },
             loading: false,
           });
+
+          // Start listening
+          NotificationService.listenForInteractions(data.user.id);
+
         } catch (error: any) {
           console.error("❌ Sign-up error:", error);
           set({ loading: false });
@@ -138,7 +149,7 @@ export const useAuthStore = create<AuthStore>()(
       signIn: async (email, password) => {
         try {
           set({ loading: true });
-          
+
           console.log("🔐 Attempting login for:", email);
 
           const { data, error } = await supabase.auth.signInWithPassword({
@@ -171,6 +182,10 @@ export const useAuthStore = create<AuthStore>()(
             },
             loading: false,
           });
+
+          // Start listening
+          NotificationService.listenForInteractions(data.user.id);
+
         } catch (error: any) {
           console.error("❌ Sign-in error:", error);
           set({ loading: false });
@@ -182,13 +197,14 @@ export const useAuthStore = create<AuthStore>()(
         try {
           console.log("👋 Signing out...");
           const { error } = await supabase.auth.signOut();
-          
+
           if (error) {
             console.error("❌ Signout error:", error);
             throw error;
           }
-          
+
           set({ user: null });
+          NotificationService.stopListening();
           console.log("✅ Signed out successfully");
         } catch (error) {
           console.error("❌ Sign-out error:", error);
@@ -199,9 +215,9 @@ export const useAuthStore = create<AuthStore>()(
       fetchUser: async () => {
         try {
           console.log("🔍 Fetching user...");
-          
+
           const { data, error } = await supabase.auth.getUser();
-          
+
           if (error || !data?.user) {
             console.log("ℹ️ No user found");
             set({ user: null });
@@ -209,7 +225,7 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           const user = data.user;
-          
+
           if (!user.id) {
             console.error("❌ User ID not found");
             set({ user: null });
@@ -226,6 +242,10 @@ export const useAuthStore = create<AuthStore>()(
               avatar_url: user.user_metadata?.avatar_url || "",
             },
           });
+
+          // Start listening
+          NotificationService.listenForInteractions(user.id);
+
         } catch (error) {
           console.error("❌ Fetch user error:", error);
           set({ user: null });

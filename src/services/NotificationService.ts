@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../config/supabase';
 
 // Configure notification behavior
 Notifications.setNotificationHandler({
@@ -15,13 +16,13 @@ Notifications.setNotificationHandler({
 interface ScheduledNotification {
   id: string;
   type: string;
-  scheduledTime: Date;
+  scheduledTime: string; // ✅ string, not Date
 }
-
 class NotificationService {
   private expoPushToken: string | null = null;
   private notificationListener: any = null;
   private responseListener: any = null;
+  private realtimeChannel: any = null;
 
   async init() {
     try {
@@ -97,6 +98,59 @@ class NotificationService {
         this.handleNotificationTap(response.notification.request.content.data);
       }
     );
+  }
+
+  // 📡 REAL-TIME INTERACTIONS LISTENER
+  async listenForInteractions(userId: string) {
+    if (this.realtimeChannel) {
+      this.stopListening();
+    }
+
+    console.log('📡 Starting real-time notification listener for:', userId);
+
+    this.realtimeChannel = supabase
+      .channel('public:user_notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        async (payload) => {
+          console.log('🔔 New notification received:', payload);
+          const newNotification = payload.new;
+
+          // Schedule local notification immediately
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: newNotification.title || 'New Notification',
+              body: newNotification.message || 'You have a new interaction',
+              data: {
+                type: newNotification.type,
+                screen: 'notifications', // Or specific screen based on type
+                relatedId: newNotification.related_post_id || newNotification.related_comment_id
+              },
+              sound: true,
+            },
+            trigger: null, // Immediate
+          });
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Subscribed to real-time notifications');
+        }
+      });
+  }
+
+  async stopListening() {
+    if (this.realtimeChannel) {
+      console.log('🛑 Stopping real-time notification listener');
+      await supabase.removeChannel(this.realtimeChannel);
+      this.realtimeChannel = null;
+    }
   }
 
   handleNotificationTap(data: any) {
@@ -341,6 +395,7 @@ class NotificationService {
         body: randomTip,
         data: { type: 'daily-tip', screen: 'dashboard' },
         sound: false,
+        priority: Notifications.AndroidNotificationPriority.LOW,
       },
       trigger,
     });
@@ -383,7 +438,7 @@ class NotificationService {
     notifications.push({
       id,
       type,
-      scheduledTime: new Date(),
+      scheduledTime: new Date().toISOString(),
     });
 
     await AsyncStorage.setItem('scheduled_notifications', JSON.stringify(notifications));
@@ -424,6 +479,7 @@ class NotificationService {
     if (this.responseListener) {
       Notifications.removeNotificationSubscription(this.responseListener);
     }
+    this.stopListening();
   }
 }
 
